@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.indicator.mapper.IndicatorItemMapper">
+
+    <!--
+        执行动态SQL查询
+        用途：根据指标项配置的SQL动态执行查询，支持参数替换
+        注意：使用${sql}而不是#{sql}，因为需要直接执行SQL语句
+    -->
+    <select id="executeDynamicQuery" resultType="java.util.HashMap">
+        ${sql}
+    </select>
+
+    <!--
+        执行单值查询
+        用途：执行返回单个数值的SQL查询（如COUNT、SUM等聚合函数）
+        返回：单个数值结果，通常是 Long 或 BigDecimal 类型
+    -->
+    <select id="executeSingleValueQuery" resultType="java.lang.Object">
+        ${sql}
+    </select>
+
+</mapper>

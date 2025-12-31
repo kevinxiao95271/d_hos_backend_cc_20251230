@@ -1,0 +1,134 @@
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective settings
+[WARNING] Unrecognised tag: 'mirror' (position: START_TAG seen ...</localRepository>\n  \n  \t<mirror>... @57:12)  @ E:\Tools\mvn\apache-maven-3.9.11\conf\settings.xml, line 57, column 12
+[WARNING] 
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< com.hospital:indicator-management >------------------
+[INFO] Building indicator-management 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The artifact mysql:mysql-connector-java:jar:8.0.33 has been relocated to com.mysql:mysql-connector-j:jar:8.0.33: MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
+[INFO] 
+[INFO] --- resources:3.2.0:resources (default-resources) @ indicator-management ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 1 resource
+[INFO] Copying 2 resources
+[INFO] 
+[INFO] --- compiler:3.10.1:compile (default-compile) @ indicator-management ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 66 source files to E:\Code\Claude_Job\test001\target\classes
+[INFO] 
+[INFO] --- exec:3.6.3:java (default-cli) @ indicator-management ---
+========================================
+测试修改后的SQL
+========================================
+
+1. 原始SQL:
+SELECT COUNT(*) AS result_value FROM d_mr WHERE STR_TO_DATE(B15, '%Y/%m/%d') BETWEEN '2020-01-01' AND '2020-12-31' AND (C03C LIKE 'J13%' OR C03C LIKE 'J14%' OR C03C LIKE 'J15%' OR C03C LIKE 'J18%' OR C06x01C LIKE 'J13%' OR C06x01C LIKE 'J14%' OR C06x01C LIKE 'J15%' OR C06x01C LIKE 'J18%') AND A14 >= 18
+结果: 347 条记录
+
+
+2. 修改后的SQL:
+SELECT B16 as dept_code, B16 as dept_name,  COUNT(*) AS result_value  FROM d_mr WHERE STR_TO_DATE(B15, '%Y/%m/%d') BETWEEN '2020-01-01' AND '2020-12-31' AND (C03C LIKE 'J13%' OR C03C LIKE 'J14%' OR C03C LIKE 'J15%' OR C03C LIKE 'J18%' OR C06x01C LIKE 'J13%' OR C06x01C LIKE 'J14%' OR C06x01C LIKE 'J15%' OR C06x01C LIKE 'J18%') AND A14 >= 18 GROUP BY B16
+
+结果:
+dept_code	dept_name	result_value
+----------------------------------------
+呼吸内科	呼吸内科	236
+重症医学科	重症医学科	12
+胸外科	胸外科	9
+肾内科	肾内科	5
+消化内科	消化内科	8
+康复医学科	康复医学科	4
+其他外科	其他外科	3
+血液内科	血液内科	6
+心血管内科	心血管内科	19
+急诊医学科	急诊医学科	9
+其他业务科室	其他业务科室	2
+内分泌内科	内分泌内科	6
+传染科	传染科	6
+神经内科	神经内科	8
+肿瘤科	肿瘤科	4
+普通外科	普通外科	3
+儿科	儿科	1
+神经外科	神经外科	1
+中医科	中医科	2
+骨科	骨科	1
+
+共 20 个科室有数据
+
+
+========================================
+测试a0055 (总费用) 的修改后SQL
+========================================
+
+SQL:
+SELECT B16 as dept_code, B16 as dept_name,  IFNULL(SUM(D01), 0) AS result_value  FROM d_mr WHERE STR_TO_DATE(B15, '%Y/%m/%d') BETWEEN '2020-01-01' AND '2020-12-31' AND (C03C LIKE 'J13%' OR C03C LIKE 'J14%' OR C03C LIKE 'J15%' OR C03C LIKE 'J18%' OR C06x01C LIKE 'J13%' OR C06x01C LIKE 'J14%' OR C06x01C LIKE 'J15%' OR C06x01C LIKE 'J18%') AND A14 >= 18 GROUP BY B16
+
+结果:
+dept_code	dept_name	result_value
+----------------------------------------
+呼吸内科	呼吸内科	2288232.599999999
+重症医学科	重症医学科	770686.38
+胸外科	胸外科	182143.38
+肾内科	肾内科	67826.04000000001
+消化内科	消化内科	56769.25
+康复医学科	康复医学科	49703.090000000004
+其他外科	其他外科	19702.82
+血液内科	血液内科	79540.33
+心血管内科	心血管内科	156162.24000000002
+急诊医学科	急诊医学科	41075.54
+其他业务科室	其他业务科室	60871.34
+内分泌内科	内分泌内科	52434.93
+传染科	传染科	72402.43
+神经内科	神经内科	83235.56999999999
+肿瘤科	肿瘤科	38974.13
+普通外科	普通外科	164366.13
+儿科	儿科	3878.15
+神经外科	神经外科	2343.01
+中医科	中医科	41016.09
+骨科	骨科	2515.58
+
+共 20 个科室有数据
+[WARNING] thread Thread[mysql-cj-abandoned-connection-cleanup,5,com.hospital.indicator.util.TestModifiedSQL] was interrupted but is still alive after waiting at least 15000msecs
+[WARNING] thread Thread[mysql-cj-abandoned-connection-cleanup,5,com.hospital.indicator.util.TestModifiedSQL] will linger despite being asked to die via interruption
+[WARNING] NOTE: 1 thread(s) did not finish despite being asked to via interruption. This is not a problem with exec:java, it is a problem with the running code. Although not serious, it should be remedied.
+[WARNING] Couldn't destroy threadgroup org.codehaus.mojo.exec.AbstractExecJavaBase$IsolatedThreadGroup[name=com.hospital.indicator.util.TestModifiedSQL,maxpri=10]
+java.lang.IllegalThreadStateException
+    at java.lang.ThreadGroup.destroy (ThreadGroup.java:778)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.execute (AbstractExecJavaBase.java:345)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:73)
+    at org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder.build (SingleThreadedBuilder.java:53)
+    at org.apache.maven.lifecycle.internal.LifecycleStarter.execute (LifecycleStarter.java:118)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:261)
+    at org.apache.maven.DefaultMaven.doExecute (DefaultMaven.java:173)
+    at org.apache.maven.DefaultMaven.execute (DefaultMaven.java:101)
+    at org.apache.maven.cli.MavenCli.execute (MavenCli.java:906)
+    at org.apache.maven.cli.MavenCli.doMain (MavenCli.java:283)
+    at org.apache.maven.cli.MavenCli.main (MavenCli.java:206)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:498)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced (Launcher.java:255)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.launch (Launcher.java:201)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode (Launcher.java:361)
+    at org.codehaus.plexus.classworlds.launcher.Launcher.main (Launcher.java:314)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  22.344 s
+[INFO] Finished at: 2025-12-31T21:36:59+08:00
+[INFO] ------------------------------------------------------------------------

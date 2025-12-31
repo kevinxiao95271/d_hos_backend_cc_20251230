@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql:*)",
+      "Bash(dir:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(curl:*)",
+      "Bash(copy:*)",
+      "Bash(mvn compile:*)",
+      "Bash(taskkill /F /FI \"WINDOWTITLE eq *java*\")",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c taskkill //PID 27820 //F)",
+      "Bash(python:*)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(timeout /t 15 /nobreak)",
+      "Bash(java:*)",
+      "Bash(mvn exec:java:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File test-indicators.ps1)",
+      "Bash(tasklist:*)",
+      "Bash(timeout /t 25 /nobreak)",
+      "Bash(iconv:*)",
+      "Bash(ping:*)",
+      "Bash(javac:*)",
+      "Bash(grep:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File test-dept-drill.ps1:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File test-mi-correct.ps1)",
+      "Bash(git checkout:*)",
+      "Bash(git init:*)",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(del nul)"
+    ]
+  }
+}

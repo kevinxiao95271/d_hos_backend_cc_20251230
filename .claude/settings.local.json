@@ -36,7 +36,20 @@
       "Bash(mvn package:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File test-crud-api.ps1:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(if exist target rmdir /s /q target)",
+      "Bash(powershell -Command:*)",
+      "Bash(ls:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@81.71.44.180 \"mkdir -p /opt/indicator-management && echo ''部署目录创建成功''\")",
+      "Bash(sshpass -p \"Yiguo_9527\" ssh -o StrictHostKeyChecking=no root@81.71.44.180 \"mkdir -p /opt/indicator-management && echo ''部署目录创建成功'' && java -version\")",
+      "Bash(pip install:*)",
+      "Bash(sshpass:*)",
+      "Bash(jar:*)",
+      "Read(//d/AiCode/**)",
+      "Bash(ssh root@81.71.44.180 \"cd /data/indicator-management && dos2unix *.sh 2>/dev/null || sed -i ''s/\\\\r$//'' *.sh && chmod +x *.sh && ./stop.sh && ./start.sh && sleep 3 && cat logs/console.log 2>/dev/null | tail -20\")",
+      "Bash(ssh root@81.71.44.180 \"cd /data/indicator-management && sed -i ''s/\\\\r$//'' *.sh && chmod +x *.sh && echo ''Scripts fixed''\")",
+      "Bash(git reset:*)",
+      "Bash(javap:*)"
     ]
   }
 }

@@ -1,0 +1,70 @@
+package com.hospital.indicator.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+/**
+ * 指标保存DTO
+ *
+ * @author Claude
+ * @date 2025-12-30
+ */
+@Data
+@Schema(description = "指标保存DTO")
+public class IndicatorSaveDTO {
+
+    @Schema(description = "主键ID（更新时必填）")
+    private Long id;
+
+    @Schema(description = "指标编码", required = true, example = "10.3.1")
+    @NotBlank(message = "指标编码不能为空")
+    private String metricCode;
+
+    @Schema(description = "指标名称", required = true)
+    @NotBlank(message = "指标名称不能为空")
+    private String metricName;
+
+    @Schema(description = "父级指标编码", example = "10.3")
+    private String parentCode;
+
+    @Schema(description = "指标层级", example = "3")
+    private Integer indicatorLevel;
+
+    @Schema(description = "是否叶子节点：0-否，1-是", required = true)
+    @NotNull(message = "是否叶子节点不能为空")
+    private Integer isLeaf;
+
+    @Schema(description = "指标类型：QUANTITATIVE(定量)、QUALITATIVE(定性)", required = true)
+    @NotBlank(message = "指标类型不能为空")
+    private String metricType;
+
+    @Schema(description = "计算类型：ITEM(指标项)、EXPRESSION(表达式)", required = true)
+    @NotBlank(message = "计算类型不能为空")
+    private String calculationType;
+
+    @Schema(description = "计算表达式", example = "a0052/a0050 或 SUM(a0050)/SUM(a0052)")
+    private String expression;
+
+    @Schema(description = "关联的指标项编码（JSON数组）", example = "[\"a0050\",\"a0052\"]")
+    private String relatedItems;
+
+    @Schema(description = "单位")
+    private String unit;
+
+    @Schema(description = "是否支持科室下钻：0-否，1-是")
+    private Integer supportDeptDrill;
+
+    @Schema(description = "状态：0-禁用，1-启用", required = true)
+    @NotNull(message = "状态不能为空")
+    private Integer status;
+
+    @Schema(description = "备注说明")
+    private String remark;
+
+    @Schema(description = "排序号")
+    private Integer sortOrder;
+
+}

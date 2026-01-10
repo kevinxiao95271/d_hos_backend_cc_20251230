@@ -375,7 +375,7 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
      * 计算时间值字符串
      */
     private String calculateTimeValue(String timeDimension, LocalDate startDate, LocalDate endDate) {
-        switch (timeDimension.toUpperCase()) {
+        switch (timeDimension) {
             case "YEAR":
                 return String.valueOf(startDate.getYear());
             case "QUARTER":
@@ -385,11 +385,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                 return startDate.format(DateTimeFormatter.ofPattern("yyyy-MM"));
             case "DAY":
                 return startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            case "CUSTOM":
-                // 自定义时间范围，格式：开始日期~结束日期
-                return startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) +
-                       "~" +
-                       endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             default:
                 throw new BusinessException("不支持的时间维度：" + timeDimension);
         }

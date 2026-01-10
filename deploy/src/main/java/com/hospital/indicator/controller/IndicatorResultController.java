@@ -46,7 +46,7 @@ public class IndicatorResultController {
     @PostMapping("/calculate")
     public Result<IndicatorResult> calculate(
             @Parameter(description = "指标编码", required = true) @RequestParam String metricCode,
-            @Parameter(description = "时间维度：YEAR/QUARTER/MONTH/DAY/CUSTOM", required = true) @RequestParam String timeDimension,
+            @Parameter(description = "时间维度：YEAR/QUARTER/MONTH/DAY", required = true) @RequestParam String timeDimension,
             @Parameter(description = "开始日期", required = true, example = "2025-01-01") @RequestParam String startDate,
             @Parameter(description = "结束日期", required = true, example = "2025-01-31") @RequestParam String endDate) {
 
@@ -66,7 +66,7 @@ public class IndicatorResultController {
     @PostMapping("/batch-calculate")
     public Result<List<IndicatorResult>> batchCalculate(
             @Parameter(description = "指标编码列表（为空时计算所有叶子指标）") @RequestBody(required = false) List<String> metricCodes,
-            @Parameter(description = "时间维度：YEAR/QUARTER/MONTH/DAY/CUSTOM", required = true) @RequestParam String timeDimension,
+            @Parameter(description = "时间维度：YEAR/QUARTER/MONTH/DAY", required = true) @RequestParam String timeDimension,
             @Parameter(description = "开始日期", required = true, example = "2025-01-01") @RequestParam String startDate,
             @Parameter(description = "结束日期", required = true, example = "2025-03-31") @RequestParam String endDate) {
 
@@ -164,7 +164,7 @@ public class IndicatorResultController {
     @PostMapping("/dept-drill-down")
     public Result<List<IndicatorResultDept>> deptDrillDown(
             @Parameter(description = "指标编码", required = true) @RequestParam String metricCode,
-            @Parameter(description = "时间维度：YEAR/QUARTER/MONTH/DAY/CUSTOM", required = true) @RequestParam String timeDimension,
+            @Parameter(description = "时间维度：YEAR/QUARTER/MONTH/DAY", required = true) @RequestParam String timeDimension,
             @Parameter(description = "开始日期", required = true, example = "2025-01-01") @RequestParam String startDate,
             @Parameter(description = "结束日期", required = true, example = "2025-12-31") @RequestParam String endDate) {
 

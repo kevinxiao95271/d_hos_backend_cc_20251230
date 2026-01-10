@@ -63,9 +63,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
     @Override
     @Transactional(rollbackFor = Exception.class)
     public IndicatorResult calculateIndicator(String metricCode, String timeDimension, LocalDate startDate, LocalDate endDate) {
-        log.info("开始计算指标: metricCode={}, timeDimension={}, startDate={}, endDate={}",
-                metricCode, timeDimension, startDate, endDate);
-
         try {
             // 1. 查询指标配置
             Indicator indicator = getIndicatorByCode(metricCode);
@@ -117,7 +114,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                     resultValue, JSON.toJSONString(resultJsonMap)
             );
 
-            log.info("指标计算完成: metricCode={}, resultValue={}", metricCode, resultValue);
             return result;
 
         } catch (Exception e) {
@@ -132,9 +128,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
     @Override
     public List<IndicatorResult> batchCalculateIndicators(List<String> metricCodes, String timeDimension,
                                                           LocalDate startDate, LocalDate endDate) {
-        log.info("开始批量计算指标: metricCodes={}, timeDimension={}, startDate={}, endDate={}",
-                metricCodes, timeDimension, startDate, endDate);
-
         // 如果未指定指标编码，查询所有叶子指标
         if (metricCodes == null || metricCodes.isEmpty()) {
             LambdaQueryWrapper<Indicator> wrapper = new LambdaQueryWrapper<>();
@@ -167,16 +160,12 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
             }
         }
 
-        log.info("批量计算完成，共计算 {} 条结果", results.size());
         return results;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<IndicatorResultDept> calculateDeptDrill(String metricCode, String timeDimension, LocalDate startDate, LocalDate endDate) {
-        log.info("开始计算科室下钻: metricCode={}, timeDimension={}, startDate={}, endDate={}",
-                metricCode, timeDimension, startDate, endDate);
-
         List<IndicatorResultDept> results = new ArrayList<>();
 
         try {
@@ -251,8 +240,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                     // 单个科室失败不影响其他科室
                 }
             }
-
-            log.info("科室下钻计算完成: metricCode={}, 共计算 {} 个科室", metricCode, results.size());
 
         } catch (Exception e) {
             log.error("科室下钻计算异常: metricCode={}, error={}", metricCode, e.getMessage(), e);
@@ -340,7 +327,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                 }
 
                 valueMap.put(itemCode, value);
-                log.debug("指标项查询结果 [{}]: {}", itemCode, value);
 
             } catch (Exception e) {
                 log.error("查询指标项失败: itemCode={}, error={}", itemCode, e.getMessage(), e);
@@ -580,8 +566,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                     itemMap.put(itemCode, value);
                 }
 
-                log.debug("指标项科室下钻查询完成 [{}]: {} 个科室有数据", itemCode, rows.size());
-
             } catch (Exception e) {
                 log.error("查询科室下钻数据失败: itemCode={}, error={}", itemCode, e.getMessage(), e);
                 throw new BusinessException("查询科室下钻数据失败：" + itemCode + ", " + e.getMessage());
@@ -628,9 +612,6 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
 
         // 添加GROUP BY B16
         String newSql = selectPart + valuePart + " " + fromPart + " GROUP BY B16";
-
-        log.debug("修改前SQL: {}", originalSql);
-        log.debug("修改后SQL: {}", newSql);
 
         return newSql;
     }

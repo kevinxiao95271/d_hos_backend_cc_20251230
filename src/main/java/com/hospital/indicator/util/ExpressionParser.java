@@ -111,9 +111,6 @@ public class ExpressionParser {
                 processedExpression = processedExpression.replaceAll("\\b" + itemCode + "\\b", value.toString());
             }
 
-            log.debug("原始表达式: {}", expression);
-            log.debug("处理后表达式: {}", processedExpression);
-
             // 3. 使用 AviatorEvaluator 计算表达式
             Expression compiledExpression;
             Object result;

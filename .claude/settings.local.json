@@ -34,7 +34,9 @@
       "Bash(mvn clean package:*)",
       "Bash(timeout /t 10 /nobreak)",
       "Bash(mvn package:*)",
-      "Bash(powershell -ExecutionPolicy Bypass -File test-crud-api.ps1:*)"
+      "Bash(powershell -ExecutionPolicy Bypass -File test-crud-api.ps1:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

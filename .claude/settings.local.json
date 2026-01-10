@@ -30,7 +30,11 @@
       "Bash(git init:*)",
       "Bash(git config:*)",
       "Bash(git add:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(mvn clean package:*)",
+      "Bash(timeout /t 10 /nobreak)",
+      "Bash(mvn package:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File test-crud-api.ps1:*)"
     ]
   }
 }

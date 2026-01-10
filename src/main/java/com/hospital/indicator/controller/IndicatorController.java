@@ -102,6 +102,26 @@ public class IndicatorController {
         return Result.success("保存成功", indicator);
     }
 
+    @Operation(summary = "新增指标", description = "新增指标配置（RESTful风格）")
+    @PostMapping
+    public Result<Indicator> create(@Validated @RequestBody IndicatorSaveDTO dto) {
+        if (dto.getId() != null) {
+            return Result.error("新增时不应包含ID");
+        }
+        Indicator indicator = indicatorService.saveOrUpdateIndicator(dto);
+        return Result.success("新增成功", indicator);
+    }
+
+    @Operation(summary = "更新指标", description = "更新指标配置（RESTful风格）")
+    @PutMapping("/{id}")
+    public Result<Indicator> update(
+            @Parameter(description = "指标ID") @PathVariable Long id,
+            @Validated @RequestBody IndicatorSaveDTO dto) {
+        dto.setId(id);
+        Indicator indicator = indicatorService.saveOrUpdateIndicator(dto);
+        return Result.success("更新成功", indicator);
+    }
+
     @Operation(summary = "删除指标", description = "根据ID删除指标")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "指标ID") @PathVariable Long id) {

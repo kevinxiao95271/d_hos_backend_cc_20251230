@@ -95,6 +95,26 @@ public class IndicatorItemController {
         return Result.success("保存成功", item);
     }
 
+    @Operation(summary = "新增指标项", description = "新增指标项配置（RESTful风格）")
+    @PostMapping
+    public Result<IndicatorItem> create(@Validated @RequestBody IndicatorItemSaveDTO dto) {
+        if (dto.getId() != null) {
+            return Result.error("新增时不应包含ID");
+        }
+        IndicatorItem item = indicatorItemService.saveOrUpdateIndicatorItem(dto);
+        return Result.success("新增成功", item);
+    }
+
+    @Operation(summary = "更新指标项", description = "更新指标项配置（RESTful风格）")
+    @PutMapping("/{id}")
+    public Result<IndicatorItem> update(
+            @Parameter(description = "指标项ID") @PathVariable Long id,
+            @Validated @RequestBody IndicatorItemSaveDTO dto) {
+        dto.setId(id);
+        IndicatorItem item = indicatorItemService.saveOrUpdateIndicatorItem(dto);
+        return Result.success("更新成功", item);
+    }
+
     @Operation(summary = "删除指标项", description = "根据ID删除指标项")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "指标项ID") @PathVariable Long id) {

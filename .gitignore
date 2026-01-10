@@ -51,3 +51,6 @@ logs/
 *.swp
 *.bak
 *~
+deploy/release/
+*.class
+nul

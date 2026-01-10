@@ -79,29 +79,9 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# 日志配置
+# 日志配置（详细配置见 logback-spring.xml）
 logging:
-  level:
-    root: WARN
-    # 应用核心业务日志 - 只打印 WARN 和 ERROR
-    com.hospital.indicator: WARN
-    # Mapper 层 - 打印 SQL 语句
-    com.hospital.indicator.mapper: DEBUG
-    # MyBatis Plus SQL 日志
-    com.baomidou.mybatisplus: WARN
-    # Druid 数据源 - 关闭详细日志
-    com.alibaba.druid: WARN
-    # Spring 框架 - 只打印错误
-    org.springframework: WARN
-    org.springframework.web: WARN
-    org.springframework.boot: WARN
-    # Tomcat - 只打印错误
-    org.apache.tomcat: WARN
-    org.apache.catalina: WARN
-    # Hibernate Validator - 关闭详细日志
-    org.hibernate.validator: WARN
-  pattern:
-    console: "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"
+  config: classpath:logback-spring.xml
 
 # Springdoc OpenAPI 配置（Swagger 3）
 springdoc:

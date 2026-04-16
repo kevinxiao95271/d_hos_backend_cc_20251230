@@ -30,7 +30,11 @@
       "Bash(git init:*)",
       "Bash(git config:*)",
       "Bash(git add:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(mkdir -p docs)",
+      "Bash(mv 2023年真实数据验证报告.md B15字段日期比较修复报告.md DELIVERY.md QUICKSTART.md Swagger中文乱码修复说明.md TEST_REPORT.md 启动与测试报告.md 完整指标体系验证报告.md 心力衰竭次均费用-最终验证报告.md 心力衰竭次均费用验证报告.md 所有指标项SQL修复与验证报告.md 手术类指标接口访问范例与结果.md 手术类指标项SQL修复报告.md 手术类计算指标接口测试报告.md 指标更新完成报告.md 指标计算API自测验证报告.md 指标计算API调用指南.md 指标配置验证报告.md 指标验证清单.md 接口访问范例.md 系统完整部署报告.md 髋关节置换术指标测试报告.md check_dmr.txt check_indicator.txt test-utf8.txt test_modified_sql.txt test_output.txt docs/)",
+      "Bash(mkdir -p scripts)",
+      "Bash(mv test-api.bat test-dept-drill.ps1 test-indicators.ps1 test-indicators.sh test-mi-correct.ps1 test-mi-indicator.ps1 scripts/)"
     ]
   }
 }

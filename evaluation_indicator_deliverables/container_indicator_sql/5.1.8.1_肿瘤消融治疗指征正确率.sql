@@ -1,0 +1,51 @@
+-- ===========================================
+-- 国家限制类医疗技术指标注册脚本
+-- 指标编码：5.1.8.1
+-- 指标名称：肿瘤消融治疗指征正确率
+-- 创建日期：2026-02-06
+-- ===========================================
+
+SET @data_source_id = (SELECT ID FROM DATASOURCE WHERE DATASOURCE_NAME = '肿瘤消融治疗技术数据源' AND INVALID = 0 LIMIT 1);
+SET @category_id = (SELECT ID FROM KPI_CATEGORY WHERE CATEGORY_NAME LIKE '%国家限制类医疗技术%' AND INVALID = 0 LIMIT 1);
+SET @create_user = 'system';
+
+-- 创建分子指标
+SET @numerator_kpi_name = '符合治疗指征的例次数';
+SET @numerator_category_code = '5.1.8.1.1';
+CALL sp_kpi_item_create(
+    @numerator_kpi_name, @category_id, NULL, 'integer', 0, 'increase', 'value', @data_source_id, '{"p_date_type":"out"}',
+    '实施肿瘤消融治疗的患者，符合治疗指征的例次数占同期肿瘤消融治疗总例次数的比例。', '《肿瘤消融治疗技术临床应用管理规范（2022 版）》《肿瘤消融治疗技术临床应用质量控制指标（2022 版）》。', '反映医院肿瘤消融治疗技术的规范性。',
+    '肿瘤消融治疗技术数据源', NULL, '分子：是指患者在住院治疗过程中经过肿瘤消融评估，符合肿瘤消融治疗适应证，并完成肿瘤消融治疗的例次数。 分母：是指同期出院患者中完成肿瘤消融治疗的总例次数。 肿瘤消融治疗指征：①凝血酶原活动度（PTA）＞50%；②无器官功能障碍（按相应器官功能进行评价），如肝功能 Child A 、B 级；③体能状态评分（ECOG 方法）分级≤2 级；④麻醉评估：病情分级（ASA）≤Ⅲ级（美国麻醉医师协会病情分级标准）；⑤满足上述四项并符合相应肿瘤消融治疗适应证，为肿瘤消融治疗指征选择正确。', '百分比（%）', '病历资料。', NULL,
+    '出院日期', '出院科室名称', '是否完成肿瘤消融治疗指征正确', NULL, NULL, NULL, NULL, 1.0000, 'sum',
+    '["出院科室名称","入院科室名称"]', '[]', '["患者ID","住院号","患者姓名","病案号","出院时间"]',
+    @create_user, CONCAT('[{"category_id":', @category_id, ',"category_code":"5.1.8.1.1"}]'), NULL, NULL, NULL, NULL
+);
+SET @numerator_kpi_id = (SELECT ID FROM KPI_ITEM WHERE KPI_NAME = @numerator_kpi_name AND INVALID = 0 AND KPI_TYPE = 'value' ORDER BY CREATE_TIME DESC LIMIT 1);
+
+-- 创建分母指标
+SET @denominator_kpi_name = '同期肿瘤消融治疗总例次数';
+SET @denominator_category_code = '5.1.8.1.2';
+CALL sp_kpi_item_create(
+    @denominator_kpi_name, @category_id, NULL, 'integer', 0, 'increase', 'value', @data_source_id, '{"p_date_type":"out"}',
+    '实施肿瘤消融治疗的患者，符合治疗指征的例次数占同期肿瘤消融治疗总例次数的比例。', '《肿瘤消融治疗技术临床应用管理规范（2022 版）》《肿瘤消融治疗技术临床应用质量控制指标（2022 版）》。', '反映医院肿瘤消融治疗技术的规范性。',
+    '肿瘤消融治疗技术数据源', NULL, '分子：是指患者在住院治疗过程中经过肿瘤消融评估，符合肿瘤消融治疗适应证，并完成肿瘤消融治疗的例次数。 分母：是指同期出院患者中完成肿瘤消融治疗的总例次数。 肿瘤消融治疗指征：①凝血酶原活动度（PTA）＞50%；②无器官功能障碍（按相应器官功能进行评价），如肝功能 Child A 、B 级；③体能状态评分（ECOG 方法）分级≤2 级；④麻醉评估：病情分级（ASA）≤Ⅲ级（美国麻醉医师协会病情分级标准）；⑤满足上述四项并符合相应肿瘤消融治疗适应证，为肿瘤消融治疗指征选择正确。', '百分比（%）', '病历资料。', NULL,
+    '出院日期', '出院科室名称', '是否完成肿瘤消融治疗指征正确', NULL, NULL, NULL, NULL, 1.0000, 'sum',
+    '["出院科室名称","入院科室名称"]', '[]', '["患者ID","住院号","患者姓名","病案号","出院时间"]',
+    @create_user, CONCAT('[{"category_id":', @category_id, ',"category_code":"5.1.8.1.2"}]'), NULL, NULL, NULL, NULL
+);
+SET @denominator_kpi_id = (SELECT ID FROM KPI_ITEM WHERE KPI_NAME = @denominator_kpi_name AND INVALID = 0 AND KPI_TYPE = 'value' ORDER BY CREATE_TIME DESC LIMIT 1);
+
+-- 创建比率指标
+SET @kpi_name = '肿瘤消融治疗指征正确率';
+SET @category_code = '5.1.8.1';
+CALL sp_kpi_item_create(
+    @kpi_name, @category_id, NULL, 'percent', 2, 'increase', 'ratio', @data_source_id, '{"p_date_type":"out"}',
+    '实施肿瘤消融治疗的患者，符合治疗指征的例次数占同期肿瘤消融治疗总例次数的比例。', '《肿瘤消融治疗技术临床应用管理规范（2022 版）》《肿瘤消融治疗技术临床应用质量控制指标（2022 版）》。', '反映医院肿瘤消融治疗技术的规范性。',
+    '肿瘤消融治疗技术数据源', NULL, '分子：是指患者在住院治疗过程中经过肿瘤消融评估，符合肿瘤消融治疗适应证，并完成肿瘤消融治疗的例次数。 分母：是指同期出院患者中完成肿瘤消融治疗的总例次数。 肿瘤消融治疗指征：①凝血酶原活动度（PTA）＞50%；②无器官功能障碍（按相应器官功能进行评价），如肝功能 Child A 、B 级；③体能状态评分（ECOG 方法）分级≤2 级；④麻醉评估：病情分级（ASA）≤Ⅲ级（美国麻醉医师协会病情分级标准）；⑤满足上述四项并符合相应肿瘤消融治疗适应证，为肿瘤消融治疗指征选择正确。', '百分比（%）', '病历资料。', NULL,
+    '出院日期', '出院科室名称', NULL, @numerator_kpi_id, @denominator_kpi_id, NULL, NULL, 1.0, 'sum',
+    '["出院科室名称","入院科室名称"]', '[]', '["患者ID","住院号","患者姓名","病案号","出院时间"]',
+    @create_user, CONCAT('[{"category_id":', @category_id, ',"category_code":"5.1.8.1"}]'), NULL, NULL, NULL, NULL
+);
+
+SELECT k.ID AS 指标ID, k.KPI_NAME AS 指标名称, k.KPI_TYPE AS 指标类型, k.NUMERATOR_KPI_ID AS 分子指标ID, k.DENOMINATOR_KPI_ID AS 分母指标ID
+FROM KPI_ITEM k WHERE k.KPI_NAME = @kpi_name AND k.INVALID = 0 ORDER BY k.CREATE_TIME DESC LIMIT 1;

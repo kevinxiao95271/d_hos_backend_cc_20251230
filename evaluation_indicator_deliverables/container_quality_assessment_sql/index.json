@@ -1,0 +1,5 @@
+[
+  "quality_assessment_tables.sql",
+  "quality_assessment_procedures.sql",
+  "quality_assessment_reg_microService.sql"
+]

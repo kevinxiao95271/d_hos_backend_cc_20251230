@@ -8,88 +8,75 @@ import com.hospital.indicator.dto.IndicatorTreeDTO;
 import com.hospital.indicator.entity.Indicator;
 import com.hospital.indicator.mapper.IndicatorMapper;
 import com.hospital.indicator.service.IndicatorService;
+import com.hospital.indicator.context.UserContext;
+import com.hospital.indicator.mapper.sys.IndicatorPermissionMapper;
+import com.hospital.indicator.service.IndicatorService;
 import com.hospital.indicator.util.ExpressionParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * 指标服务实现类
- *
- * @author Claude
- * @date 2025-12-30
  */
 @Slf4j
 @Service
 public class IndicatorServiceImpl extends ServiceImpl<IndicatorMapper, Indicator> implements IndicatorService {
 
+    @Autowired
+    private IndicatorPermissionMapper permissionMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Indicator saveOrUpdateIndicator(IndicatorSaveDTO dto) {
-        // 1. 校验指标编码唯一性
-        LambdaQueryWrapper<Indicator> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Indicator::getMetricCode, dto.getMetricCode());
-        if (dto.getId() != null) {
-            queryWrapper.ne(Indicator::getId, dto.getId());
+        Indicator indicator = new Indicator();
+        BeanUtils.copyProperties(dto, indicator);
+        // metricPool 未传时默认国考池
+        if (StringUtils.isBlank(indicator.getMetricPool())) {
+            indicator.setMetricPool("POOL_NATIONAL");
         }
-        if (this.count(queryWrapper) > 0) {
-            throw new BusinessException("指标编码已存在：" + dto.getMetricCode());
-        }
-
-        // 2. 如果是叶子节点且有表达式，校验表达式有效性
-        if (dto.getIsLeaf() == 1 && StringUtils.isNotBlank(dto.getExpression())) {
-            if (!validateExpression(dto.getExpression())) {
-                throw new BusinessException("表达式格式不正确");
-            }
-
-            // 3. 自动提取表达式中的指标项编码
-            List<String> itemCodes = ExpressionParser.extractItemCodes(dto.getExpression());
-            if (!itemCodes.isEmpty()) {
-                // 转换为JSON数组格式
-                dto.setRelatedItems(com.alibaba.fastjson.JSON.toJSONString(itemCodes));
-            }
-        }
-
-        // 4. 如果有父级编码，自动计算层级
-        if (StringUtils.isNotBlank(dto.getParentCode())) {
-            LambdaQueryWrapper<Indicator> parentWrapper = new LambdaQueryWrapper<>();
-            parentWrapper.eq(Indicator::getMetricCode, dto.getParentCode());
-            Indicator parent = this.getOne(parentWrapper);
-            if (parent != null) {
-                dto.setIndicatorLevel(parent.getIndicatorLevel() + 1);
-            }
-        } else {
-            // 顶级指标，层级为1
-            dto.setIndicatorLevel(1);
-        }
-
-        // 5. 转换DTO为实体
-        Indicator entity = new Indicator();
-        BeanUtils.copyProperties(dto, entity);
-
-        // 6. 保存或更新
-        this.saveOrUpdate(entity);
-        return entity;
+        this.saveOrUpdate(indicator);
+        return indicator;
     }
 
     @Override
-    public List<IndicatorTreeDTO> getIndicatorTree() {
-        // 1. 查询所有启用的指标
-        LambdaQueryWrapper<Indicator> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Indicator::getStatus, 1);
-        queryWrapper.orderByAsc(Indicator::getSortOrder);
-        List<Indicator> allIndicators = this.list(queryWrapper);
+    public List<IndicatorTreeDTO> getIndicatorTree(String metricPool) {
+        UserContext user = UserContext.get();
+        List<Indicator> visibleIndicators;
+
+        if (user != null && user.getDataScope() != null && user.getDataScope() == 50) {
+            // 质控科/超管：看全院所有指标，按指定池过滤
+            visibleIndicators = this.list(new LambdaQueryWrapper<Indicator>()
+                    .eq(Indicator::getStatus, 1)
+                    .eq(StringUtils.isNotBlank(metricPool), Indicator::getMetricPool, metricPool)
+                    .orderByAsc(Indicator::getSortOrder));
+        } else if (user != null) {
+            // 普通科室：按科室绑定和业务方向过滤
+            List<String> directions = StringUtils.isNotBlank(user.getBusinessDirections())
+                    ? Arrays.asList(user.getBusinessDirections().split(","))
+                    : new ArrayList<>();
+
+            visibleIndicators = permissionMapper.selectVisibleIndicators(
+                    user.getDeptId(),
+                    directions,
+                    metricPool
+            );
+        } else {
+            visibleIndicators = new ArrayList<>();
+        }
 
         // 2. 转换为DTO
-        List<IndicatorTreeDTO> allDtos = allIndicators.stream().map(this::convertToTreeDTO).collect(Collectors.toList());
+        List<IndicatorTreeDTO> allDtos = visibleIndicators.stream().map(this::convertToTreeDTO).collect(Collectors.toList());
 
-        // 3. 构建树形结构（从顶级节点开始）
+        // 3. 构建树形结构
         return buildTree(allDtos, null);
     }
 

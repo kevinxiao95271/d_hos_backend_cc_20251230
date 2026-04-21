@@ -102,3 +102,14 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.hospital.indicator.controller
+
+# JWT 配置
+jwt:
+  # 密钥
+  secret: dgear_hospital_indicator_system_secret_key_2026
+  # 过期时间（秒），默认 1 天 (86400秒)
+  expire: 86400
+  # 请求头名称
+  header: Authorization
+  # 令牌前缀
+  prefix: "Bearer "

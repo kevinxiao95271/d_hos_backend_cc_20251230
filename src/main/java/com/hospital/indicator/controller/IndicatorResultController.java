@@ -2,10 +2,12 @@ package com.hospital.indicator.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hospital.indicator.common.Result;
+import com.hospital.indicator.context.UserContext;
 import com.hospital.indicator.entity.IndicatorResult;
 import com.hospital.indicator.entity.IndicatorResultDept;
 import com.hospital.indicator.mapper.IndicatorResultDeptMapper;
 import com.hospital.indicator.mapper.IndicatorResultMapper;
+import com.hospital.indicator.mapper.sys.IndicatorPermissionMapper;
 import com.hospital.indicator.service.IndicatorCalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,7 +43,26 @@ public class IndicatorResultController {
     @Autowired
     private IndicatorResultDeptMapper resultDeptMapper;
 
+    @Autowired
+    private IndicatorPermissionMapper permissionMapper;
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    /** dataScope=50 表示超管，可查看全部 */
+    private static final int DATA_SCOPE_ADMIN = 50;
+
+    /**
+     * 根据当前登录用户获取其可见的指标编码列表。
+     * 超管返回 null（表示不限制），普通用户返回绑定的 metric_code 列表。
+     */
+    private List<String> getVisibleMetricCodes() {
+        UserContext user = UserContext.get();
+        if (user == null || DATA_SCOPE_ADMIN == user.getDataScope()) {
+            return null;
+        }
+        List<String> codes = permissionMapper.selectVisibleMetricCodes(user.getDeptId());
+        return codes.isEmpty() ? Collections.emptyList() : codes;
+    }
 
     @Operation(summary = "执行单个指标计算", description = "根据指标编码和时间范围执行计算")
     @PostMapping("/calculate")
@@ -86,12 +108,20 @@ public class IndicatorResultController {
     public Result<List<IndicatorResult>> getLatest(
             @Parameter(description = "时间维度") @RequestParam(required = false) String timeDimension) {
 
+        List<String> visibleCodes = getVisibleMetricCodes();
+        if (visibleCodes != null && visibleCodes.isEmpty()) {
+            return Result.success(Collections.emptyList());
+        }
+
         LambdaQueryWrapper<IndicatorResult> wrapper = new LambdaQueryWrapper<>();
+        if (visibleCodes != null) {
+            wrapper.in(IndicatorResult::getMetricCode, visibleCodes);
+        }
         if (StringUtils.isNotBlank(timeDimension)) {
             wrapper.eq(IndicatorResult::getTimeDimension, timeDimension);
         }
         wrapper.orderByDesc(IndicatorResult::getCreateTime);
-        wrapper.last("LIMIT 100");  // 限制返回数量
+        wrapper.last("LIMIT 100");
 
         List<IndicatorResult> results = resultMapper.selectList(wrapper);
         return Result.success(results);
@@ -106,8 +136,15 @@ public class IndicatorResultController {
             @Parameter(description = "开始日期") @RequestParam(required = false) String startDate,
             @Parameter(description = "结束日期") @RequestParam(required = false) String endDate) {
 
-        LambdaQueryWrapper<IndicatorResult> wrapper = new LambdaQueryWrapper<>();
+        List<String> visibleCodes = getVisibleMetricCodes();
+        if (visibleCodes != null && visibleCodes.isEmpty()) {
+            return Result.success(Collections.emptyList());
+        }
 
+        LambdaQueryWrapper<IndicatorResult> wrapper = new LambdaQueryWrapper<>();
+        if (visibleCodes != null) {
+            wrapper.in(IndicatorResult::getMetricCode, visibleCodes);
+        }
         if (StringUtils.isNotBlank(metricCode)) {
             wrapper.eq(IndicatorResult::getMetricCode, metricCode);
         }
@@ -144,6 +181,11 @@ public class IndicatorResultController {
             @Parameter(description = "指标编码") @PathVariable String metricCode,
             @Parameter(description = "时间维度") @RequestParam(required = false) String timeDimension,
             @Parameter(description = "时间值") @RequestParam(required = false) String timeValue) {
+
+        List<String> visibleCodes = getVisibleMetricCodes();
+        if (visibleCodes != null && !visibleCodes.contains(metricCode)) {
+            return Result.success(Collections.emptyList());
+        }
 
         LambdaQueryWrapper<IndicatorResultDept> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(IndicatorResultDept::getMetricCode, metricCode);

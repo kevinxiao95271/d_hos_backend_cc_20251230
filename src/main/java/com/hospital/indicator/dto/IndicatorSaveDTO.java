@@ -67,4 +67,7 @@ public class IndicatorSaveDTO {
     @Schema(description = "排序号")
     private Integer sortOrder;
 
+    @Schema(description = "指标池：POOL_NATIONAL(国考)、POOL_GRADE(等级评审)", example = "POOL_NATIONAL")
+    private String metricPool;
+
 }

@@ -42,7 +42,8 @@ public class IndicatorController {
             @Parameter(description = "指标编码") @RequestParam(required = false) String metricCode,
             @Parameter(description = "指标名称") @RequestParam(required = false) String metricName,
             @Parameter(description = "指标类型") @RequestParam(required = false) String metricType,
-            @Parameter(description = "是否叶子节点") @RequestParam(required = false) Integer isLeaf) {
+            @Parameter(description = "是否叶子节点") @RequestParam(required = false) Integer isLeaf,
+            @Parameter(description = "指标池：POOL_NATIONAL(国考)、POOL_GRADE(等级评审)") @RequestParam(required = false) String metricPool) {
 
         Page<Indicator> page = new Page<>(current, size);
         LambdaQueryWrapper<Indicator> queryWrapper = new LambdaQueryWrapper<>();
@@ -59,16 +60,20 @@ public class IndicatorController {
         if (isLeaf != null) {
             queryWrapper.eq(Indicator::getIsLeaf, isLeaf);
         }
+        if (StringUtils.isNotBlank(metricPool)) {
+            queryWrapper.eq(Indicator::getMetricPool, metricPool);
+        }
 
         queryWrapper.orderByAsc(Indicator::getSortOrder);
         IPage<Indicator> result = indicatorService.page(page, queryWrapper);
         return Result.success(result);
     }
 
-    @Operation(summary = "查询指标树形结构", description = "查询所有指标的树形层级结构")
+    @Operation(summary = "查询指标树形结构", description = "查询指定指标池的树形层级结构，默认国考")
     @GetMapping("/tree")
-    public Result<List<IndicatorTreeDTO>> tree() {
-        List<IndicatorTreeDTO> tree = indicatorService.getIndicatorTree();
+    public Result<List<IndicatorTreeDTO>> tree(
+            @Parameter(description = "指标池：POOL_NATIONAL(国考，默认)、POOL_GRADE(等级评审)") @RequestParam(defaultValue = "POOL_NATIONAL") String metricPool) {
+        List<IndicatorTreeDTO> tree = indicatorService.getIndicatorTree(metricPool);
         return Result.success(tree);
     }
 

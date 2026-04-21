@@ -68,6 +68,18 @@ public class Indicator implements Serializable {
     @TableField("support_dept_drill")
     private Integer supportDeptDrill;
 
+    @Schema(description = "指标池：POOL_NATIONAL(国考)、POOL_GRADE(等级评审)")
+    @TableField("metric_pool")
+    private String metricPool;
+
+    @Schema(description = "指标分类：医疗质量、运营效率、财务成本等")
+    @TableField("metric_category")
+    private String metricCategory;
+
+    @Schema(description = "业务方向（JSON数组）：INPATIENT(住院)、OUTPATIENT(门诊)、INSPECTION(检查室)等")
+    @TableField("business_direction")
+    private String businessDirection;
+
     @Schema(description = "状态：0-禁用，1-启用")
     @TableField("status")
     private Integer status;

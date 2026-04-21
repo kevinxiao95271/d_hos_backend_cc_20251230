@@ -28,7 +28,7 @@ public interface IndicatorService extends IService<Indicator> {
      *
      * @return 指标树
      */
-    List<IndicatorTreeDTO> getIndicatorTree();
+    List<IndicatorTreeDTO> getIndicatorTree(String metricPool);
 
     /**
      * 根据父级编码查询子指标

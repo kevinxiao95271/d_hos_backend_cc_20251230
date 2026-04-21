@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hospital.indicator.mapper.sys.MenuMapper">
+
+    <select id="selectMenusByRoleId" resultType="com.hospital.indicator.entity.sys.Menu">
+        SELECT m.*
+        FROM sys_menu m
+        JOIN sys_role_menu rm ON m.menu_id = rm.menu_id
+        WHERE rm.role_id = #{roleId}
+        AND m.status = '0'
+        ORDER BY m.parent_id, m.order_num
+    </select>
+
+</mapper>

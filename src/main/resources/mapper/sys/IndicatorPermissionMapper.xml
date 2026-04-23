@@ -10,8 +10,13 @@
         <if test="pool != null and pool != ''">
             AND ti.metric_pool = #{pool}
         </if>
-        -- 科室范围：精确匹配当前科室（不再向上查找父科室）
-        AND tids.root_dept_id = #{deptId}
+        -- 科室范围：当前科室本身，如果当前科室是业务单元（dept_level > 1），则允许继承其直属父科室（主科室）的指标
+        AND tids.root_dept_id IN (
+            SELECT #{deptId}
+            UNION
+            SELECT parent_id FROM sys_dept
+            WHERE dept_id = #{deptId} AND parent_id > 0 AND dept_level > 1
+        )
         -- 业务方向过滤：指标的方向包含在用户的方向列表中
         <if test="directions != null and directions.size() > 0">
             AND (
@@ -26,8 +31,13 @@
     <select id="selectVisibleMetricCodes" resultType="java.lang.String">
         SELECT DISTINCT tids.metric_code
         FROM t_indicator_dept_scope tids
-        -- 精确匹配当前科室（不再向上查找父科室）
-        WHERE tids.root_dept_id = #{deptId}
+        WHERE tids.root_dept_id IN (
+            -- 当前科室本身
+            SELECT #{deptId}
+            UNION
+            -- 如果当前科室是业务单元（dept_level > 1），则允许继承其直属父科室的指标
+            SELECT parent_id FROM sys_dept WHERE dept_id = #{deptId} AND parent_id > 0 AND dept_level > 1
+        )
     </select>
 
     <select id="selectAllIndicators" resultType="com.hospital.indicator.entity.Indicator">

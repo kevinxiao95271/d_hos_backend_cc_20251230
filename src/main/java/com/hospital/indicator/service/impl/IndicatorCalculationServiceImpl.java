@@ -615,8 +615,17 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
         String valuePart = sql.substring(selectIndex + 6, fromIndex).trim();
         String fromPart = sql.substring(fromIndex);
 
+        // 统一将聚合值别名改为 result_value，供后续 row.get("result_value") 读取
+        String valueWithAlias;
+        if (valuePart.toLowerCase().matches(".*\\bas\\b.*")) {
+            // 将原有别名替换为 result_value
+            valueWithAlias = valuePart.replaceAll("(?i)\\bas\\s+\\w+\\s*$", "as result_value");
+        } else {
+            valueWithAlias = valuePart + " as result_value";
+        }
+
         // 添加GROUP BY B16
-        String newSql = selectPart + valuePart + " " + fromPart + " GROUP BY B16";
+        String newSql = selectPart + valueWithAlias + " " + fromPart + " GROUP BY B16";
 
         return newSql;
     }

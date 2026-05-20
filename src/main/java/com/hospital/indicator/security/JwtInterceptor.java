@@ -24,24 +24,41 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Value("${jwt.prefix}")
     private String prefix;
 
+    /** 不需要鉴权的路径片段（包含即放行） */
+    private static final String[] PASS_CONTAINS = {"swagger", "api-docs", "druid"};
+
+    /** 不需要鉴权的路径后缀（endsWith 即放行） */
+    private static final String[] PASS_ENDS = {"/auth/login", "/auth/register", "/error"};
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 放行 options 请求
+        // 放行 OPTIONS 预检请求
         if ("OPTIONS".equals(request.getMethod())) {
             return true;
+        }
+
+        String uri = request.getRequestURI();
+
+        // 放行文档/监控页面
+        for (String keyword : PASS_CONTAINS) {
+            if (uri.contains(keyword)) {
+                return true;
+            }
+        }
+
+        // 放行登录、注册路径
+        for (String suffix : PASS_ENDS) {
+            if (uri.endsWith(suffix)) {
+                return true;
+            }
         }
 
         // 获取 token
         String token = request.getHeader(jwtUtils.getHeader());
 
-        // 简单处理：如果是 Swagger 页面，放行
-        String uri = request.getRequestURI();
-        if (uri.contains("swagger") || uri.contains("api-docs") || uri.contains("druid")) {
-            return true;
-        }
-
         if (StringUtils.isBlank(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("text/plain;charset=UTF-8");
             response.getWriter().write("Unauthorized: No token provided");
             return false;
         }
@@ -66,6 +83,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("text/plain;charset=UTF-8");
             response.getWriter().write("Unauthorized: Invalid or expired token");
             return false;
         }
@@ -77,4 +95,3 @@ public class JwtInterceptor implements HandlerInterceptor {
         UserContext.remove();
     }
 }
-

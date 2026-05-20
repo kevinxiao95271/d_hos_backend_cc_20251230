@@ -18,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 指标管理 Controller
@@ -123,13 +124,21 @@ public class IndicatorController {
 
     @Operation(summary = "校验表达式有效性", description = "校验指标计算表达式是否符合规范")
     @PostMapping("/validate-expression")
-    public Result<Boolean> validateExpression(@Parameter(description = "表达式") @RequestBody String expression) {
-        boolean isValid = indicatorService.validateExpression(expression);
-        if (isValid) {
-            return Result.success("表达式校验通过", true);
-        } else {
-            return Result.error("表达式校验失败：请确保格式正确");
+    public Result<Map<String, Object>> validateExpression(@Parameter(description = "表达式") @RequestBody String expression) {
+        // 去掉 JSON 字符串首尾可能存在的双引号
+        if (expression != null && expression.startsWith("\"") && expression.endsWith("\"") && expression.length() >= 2) {
+            expression = expression.substring(1, expression.length() - 1);
         }
+        Map<String, Object> resp = new java.util.LinkedHashMap<>();
+        if (org.apache.commons.lang3.StringUtils.isBlank(expression)) {
+            resp.put("valid", false);
+            resp.put("message", "表达式不能为空");
+            return Result.success(resp);
+        }
+        boolean isValid = indicatorService.validateExpression(expression);
+        resp.put("valid", isValid);
+        resp.put("message", isValid ? "表达式校验通过" : "表达式校验失败：请确保格式正确且只使用已定义的指标项编码");
+        return Result.success(resp);
     }
 
 }

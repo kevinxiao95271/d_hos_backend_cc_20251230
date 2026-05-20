@@ -1,6 +1,7 @@
 package com.hospital.indicator.entity.sys;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -21,6 +22,10 @@ public class User implements Serializable {
 
     @TableField("username")
     private String username;
+
+    @JsonIgnore
+    @TableField("password")
+    private String password;
 
     @TableField("real_name")
     private String realName;

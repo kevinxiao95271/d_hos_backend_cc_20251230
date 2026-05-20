@@ -108,6 +108,12 @@
             <version>0.9.1</version>
         </dependency>
 
+        <!-- BCrypt 密码加密（$2a$ 格式） -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
         <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

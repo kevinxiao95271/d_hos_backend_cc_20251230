@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.indicator.mapper.IndicatorDeptScopeMapper">
+
+    <select id="selectMetricCodesByDeptId" resultType="java.lang.String">
+        SELECT metric_code FROM t_indicator_dept_scope
+        WHERE root_dept_id = #{deptId}
+        ORDER BY metric_code
+    </select>
+
+    <select id="selectDeptIdsByMetricCode" resultType="java.lang.Long">
+        SELECT root_dept_id FROM t_indicator_dept_scope
+        WHERE metric_code = #{metricCode}
+        ORDER BY root_dept_id
+    </select>
+
+    <delete id="deleteByDeptId">
+        DELETE FROM t_indicator_dept_scope WHERE root_dept_id = #{deptId}
+    </delete>
+
+    <delete id="deleteByMetricCode">
+        DELETE FROM t_indicator_dept_scope WHERE metric_code = #{metricCode}
+    </delete>
+
+</mapper>

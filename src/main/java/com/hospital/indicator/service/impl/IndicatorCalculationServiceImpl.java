@@ -120,6 +120,10 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
             log.info("指标计算完成: metricCode={}, resultValue={}", metricCode, resultValue);
             return result;
 
+        } catch (BusinessException e) {
+            // 业务配置错误（指标不存在、指标项未配置等）直接上抛，不写失败记录
+            log.warn("指标计算参数/配置错误: metricCode={}, error={}", metricCode, e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("指标计算失败: metricCode={}, error={}", metricCode, e.getMessage(), e);
 
@@ -198,6 +202,17 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
             // 4. 计算时间值
             String timeValue = calculateTimeValue(timeDimension, startDate, endDate);
 
+            // 4.5 查找父级 IndicatorResult 的 ID（用于关联 result_id）
+            Long parentResultId = 0L;
+            LambdaQueryWrapper<IndicatorResult> parentWrapper = new LambdaQueryWrapper<>();
+            parentWrapper.eq(IndicatorResult::getMetricCode, metricCode)
+                         .eq(IndicatorResult::getTimeDimension, timeDimension)
+                         .eq(IndicatorResult::getTimeValue, timeValue);
+            IndicatorResult parentResult = indicatorResultMapper.selectOne(parentWrapper);
+            if (parentResult != null) {
+                parentResultId = parentResult.getId();
+            }
+
             // 5. 对每个科室计算指标
             for (Map.Entry<String, Map<String, BigDecimal>> entry : deptItemValuesMap.entrySet()) {
                 String deptKey = entry.getKey(); // 格式: "deptCode|deptName"
@@ -206,6 +221,7 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                 String[] deptInfo = deptKey.split("\\|");
                 String deptCode = deptInfo[0];
                 String deptName = deptInfo.length > 1 ? deptInfo[1] : deptCode;
+
 
                 try {
                     // 计算该科室的指标结果
@@ -240,7 +256,7 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                     IndicatorResultDept deptResult = saveOrUpdateDeptResult(
                             metricCode, timeDimension, timeValue,
                             deptCode, deptName, resultValue,
-                            JSON.toJSONString(resultJsonMap)
+                            JSON.toJSONString(resultJsonMap), parentResultId
                     );
 
                     results.add(deptResult);
@@ -394,7 +410,7 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
                 return String.valueOf(startDate.getYear());
             case "QUARTER":
                 int quarter = (startDate.getMonthValue() - 1) / 3 + 1;
-                return startDate.getYear() + "-Q" + quarter;
+                return startDate.getYear() + "Q" + quarter;
             case "MONTH":
                 return startDate.format(DateTimeFormatter.ofPattern("yyyy-MM"));
             case "DAY":
@@ -621,13 +637,15 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
             throw new BusinessException("SQL格式不正确，无法添加科室分组");
         }
 
-        // 构建新的SELECT子句
+        // 构建新的SELECT子句（剥掉 valuePart 中可能已有的 AS 别名，再统一重命名为 result_value）
         String selectPart = "SELECT B16 as dept_code, B16 as dept_name, ";
         String valuePart = sql.substring(selectIndex + 6, fromIndex).trim();
+        // 去掉末尾形如 "AS xxx" 或 "as result_value" 的旧别名
+        valuePart = valuePart.replaceAll("(?i)\\s+as\\s+\\w+$", "").trim();
         String fromPart = sql.substring(fromIndex);
 
-        // 添加GROUP BY B16
-        String newSql = selectPart + valuePart + " " + fromPart + " GROUP BY B16";
+        // 添加GROUP BY B16，并将值列强制别名为 result_value（查询解析层依赖此名称）
+        String newSql = selectPart + "(" + valuePart + ") AS result_value " + fromPart + " GROUP BY B16";
 
         log.debug("修改前SQL: {}", originalSql);
         log.debug("修改后SQL: {}", newSql);
@@ -649,7 +667,8 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
      * 保存或更新科室下钻结果
      */
     private IndicatorResultDept saveOrUpdateDeptResult(String metricCode, String timeDimension, String timeValue,
-                                                        String deptCode, String deptName, BigDecimal resultValue, String resultJson) {
+                                                        String deptCode, String deptName, BigDecimal resultValue,
+                                                        String resultJson, Long resultId) {
         // 查询是否已存在
         LambdaQueryWrapper<IndicatorResultDept> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(IndicatorResultDept::getMetricCode, metricCode);
@@ -669,6 +688,7 @@ public class IndicatorCalculationServiceImpl implements IndicatorCalculationServ
         } else {
             // 新增
             result = new IndicatorResultDept();
+            result.setResultId(resultId != null ? resultId : 0L);
             result.setMetricCode(metricCode);
             result.setTimeDimension(timeDimension);
             result.setTimeValue(timeValue);

@@ -8,9 +8,9 @@ import java.util.Map;
 
 public interface AuthService {
     /**
-     * 登录
+     * 登录（用户名+密码）
      */
-    Map<String, Object> login(String username);
+    Map<String, Object> login(String username, String password);
 
     /**
      * 获取用户菜单树

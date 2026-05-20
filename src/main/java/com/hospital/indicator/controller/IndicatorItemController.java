@@ -128,13 +128,21 @@ public class IndicatorItemController {
 
     @Operation(summary = "校验SQL有效性", description = "校验指标项SQL语句是否符合规范")
     @PostMapping("/validate-sql")
-    public Result<Boolean> validateSql(@Parameter(description = "SQL语句") @RequestBody String sql) {
-        boolean isValid = indicatorItemService.validateSql(sql);
-        if (isValid) {
-            return Result.success("SQL校验通过", true);
-        } else {
-            return Result.error("SQL校验失败：请确保是SELECT查询且不包含危险操作");
+    public Result<Map<String, Object>> validateSql(@Parameter(description = "SQL语句") @RequestBody String sql) {
+        // 去掉 JSON 字符串首尾可能存在的双引号（兼容 application/json 和 text/plain 两种传参方式）
+        if (sql != null && sql.startsWith("\"") && sql.endsWith("\"") && sql.length() >= 2) {
+            sql = sql.substring(1, sql.length() - 1);
         }
+        Map<String, Object> resp = new java.util.LinkedHashMap<>();
+        if (org.apache.commons.lang3.StringUtils.isBlank(sql)) {
+            resp.put("valid", false);
+            resp.put("message", "SQL不能为空");
+            return Result.success(resp);
+        }
+        boolean isValid = indicatorItemService.validateSql(sql);
+        resp.put("valid", isValid);
+        resp.put("message", isValid ? "SQL校验通过" : "SQL校验失败：请确保是SELECT查询且不包含危险操作");
+        return Result.success(resp);
     }
 
 }

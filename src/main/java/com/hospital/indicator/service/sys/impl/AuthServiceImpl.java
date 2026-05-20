@@ -10,6 +10,7 @@ import com.hospital.indicator.mapper.sys.UserMapper;
 import com.hospital.indicator.service.sys.AuthService;
 import com.hospital.indicator.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,11 +34,16 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtUtils jwtUtils;
 
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     @Override
-    public Map<String, Object> login(String username) {
+    public Map<String, Object> login(String username, String password) {
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw new RuntimeException("用户名或密码错误");
+        }
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("用户名或密码错误");
         }
 
         Dept dept = deptMapper.selectById(user.getDeptId());

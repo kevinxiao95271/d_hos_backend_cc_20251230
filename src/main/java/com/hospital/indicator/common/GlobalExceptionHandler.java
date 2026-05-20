@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import java.time.format.DateTimeParseException;
 import java.util.Set;
 
 /**
@@ -61,6 +62,15 @@ public class GlobalExceptionHandler {
         String message = violations.isEmpty() ? "参数校验失败" : violations.iterator().next().getMessage();
         log.error("约束违反异常：{}", message, e);
         return Result.error(400, message);
+    }
+
+    /**
+     * 处理日期格式异常（日期格式传斜杠或其他非 yyyy-MM-dd 格式）
+     */
+    @ExceptionHandler(DateTimeParseException.class)
+    public Result<Void> handleDateTimeParseException(DateTimeParseException e) {
+        log.warn("日期格式错误：{}", e.getMessage());
+        return Result.error(400, "日期格式错误，请使用 yyyy-MM-dd 格式（例如 2020-01-01）");
     }
 
     /**

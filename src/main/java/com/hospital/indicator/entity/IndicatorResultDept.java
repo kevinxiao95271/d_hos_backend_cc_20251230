@@ -26,7 +26,7 @@ public class IndicatorResultDept implements Serializable {
     private Long id;
 
     @Schema(description = "关联的指标结果ID")
-    @TableField(value = "result_id", insertStrategy = FieldStrategy.IGNORED)
+    @TableField(value = "result_id", insertStrategy = FieldStrategy.NOT_NULL)
     private Long resultId;
 
     @Schema(description = "指标编码")

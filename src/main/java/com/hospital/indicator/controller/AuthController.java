@@ -1,7 +1,7 @@
 package com.hospital.indicator.controller;
 
+import com.hospital.indicator.common.Result;
 import com.hospital.indicator.entity.sys.Menu;
-import com.hospital.indicator.entity.sys.User;
 import com.hospital.indicator.service.sys.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,8 +21,14 @@ public class AuthController {
 
     @Operation(summary = "登录获取Token")
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestParam String username) {
-        return authService.login(username);
+    public Result<Map<String, Object>> login(@RequestParam String username,
+                                             @RequestParam String password) {
+        try {
+            Map<String, Object> data = authService.login(username, password);
+            return Result.success(data);
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @Operation(summary = "获取当前用户的菜单树")

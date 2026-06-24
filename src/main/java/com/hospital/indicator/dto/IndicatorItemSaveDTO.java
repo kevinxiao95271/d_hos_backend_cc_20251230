@@ -5,6 +5,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 /**
  * 指标项保存DTO
@@ -19,8 +20,9 @@ public class IndicatorItemSaveDTO {
     @Schema(description = "主键ID（更新时必填）")
     private Long id;
 
-    @Schema(description = "指标项编码", required = true)
+    @Schema(description = "指标项编码", required = true, example = "a0050")
     @NotBlank(message = "指标项编码不能为空")
+    @Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9]*$", message = "指标项编码格式非法：只允许字母开头，仅含字母和数字，不得包含特殊字符或空格")
     private String itemCode;
 
     @Schema(description = "指标项名称", required = true)

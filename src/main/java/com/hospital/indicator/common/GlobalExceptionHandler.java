@@ -33,12 +33,17 @@ public class GlobalExceptionHandler {
 
     /**
      * 处理参数校验异常（@Valid）
+     * 指标项编码格式错误返回专属错误码 4001，其余参数错误返回 400
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         FieldError fieldError = e.getBindingResult().getFieldError();
         String message = fieldError != null ? fieldError.getDefaultMessage() : "参数校验失败";
         log.error("参数校验异常：{}", message, e);
+        // 指标项编码格式错误使用专属错误码 4001
+        if (fieldError != null && "itemCode".equals(fieldError.getField())) {
+            return Result.error(4001, message);
+        }
         return Result.error(400, message);
     }
 

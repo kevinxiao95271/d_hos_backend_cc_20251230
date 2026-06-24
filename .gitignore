@@ -51,3 +51,10 @@ logs/
 *.swp
 *.bak
 *~
+
+# Documents
+*.doc
+*.docx
+*.xlsx
+*.xls
+*.pdf

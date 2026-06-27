@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.indicator.mapper.report.ReportDataMapper">
+
+    <select id="listByTaskAndDept" resultType="com.hospital.indicator.entity.report.ReportData">
+        SELECT * FROM t_report_data WHERE task_id = #{taskId} AND dept_id = #{deptId}
+        ORDER BY metric_code, is_result_row ASC
+    </select>
+
+    <select id="listByTaskAndMetric" resultType="com.hospital.indicator.entity.report.ReportData">
+        SELECT * FROM t_report_data WHERE task_id = #{taskId} AND metric_code = #{metricCode}
+        ORDER BY dept_id, is_result_row ASC
+    </select>
+
+    <delete id="deleteByTaskAndDeptAndMetric">
+        DELETE FROM t_report_data
+        WHERE task_id = #{taskId} AND dept_id = #{deptId} AND metric_code = #{metricCode}
+    </delete>
+
+</mapper>

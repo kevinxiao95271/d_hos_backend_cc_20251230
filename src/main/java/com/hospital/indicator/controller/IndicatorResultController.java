@@ -3,8 +3,10 @@ package com.hospital.indicator.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hospital.indicator.common.Result;
 import com.hospital.indicator.context.UserContext;
+import com.hospital.indicator.entity.Indicator;
 import com.hospital.indicator.entity.IndicatorResult;
 import com.hospital.indicator.entity.IndicatorResultDept;
+import com.hospital.indicator.mapper.IndicatorMapper;
 import com.hospital.indicator.mapper.IndicatorResultDeptMapper;
 import com.hospital.indicator.mapper.IndicatorResultMapper;
 import com.hospital.indicator.mapper.sys.IndicatorPermissionMapper;
@@ -21,6 +23,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 指标计算与结果查询 Controller
@@ -45,6 +49,9 @@ public class IndicatorResultController {
 
     @Autowired
     private IndicatorPermissionMapper permissionMapper;
+
+    @Autowired
+    private IndicatorMapper indicatorMapper;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -103,10 +110,11 @@ public class IndicatorResultController {
         return Result.success(String.format("批量计算完成：成功%d条，失败%d条", successCount, failedCount), results);
     }
 
-    @Operation(summary = "查询最新计算结果", description = "查询所有指标的最新计算结果")
+    @Operation(summary = "查询最新计算结果", description = "查询所有指标的最新计算结果，支持按数据来源类型筛选")
     @GetMapping("/latest")
     public Result<List<IndicatorResult>> getLatest(
-            @Parameter(description = "时间维度") @RequestParam(required = false) String timeDimension) {
+            @Parameter(description = "时间维度") @RequestParam(required = false) String timeDimension,
+            @Parameter(description = "数据来源类型：AUTO/MANUAL（为空查全部）") @RequestParam(required = false) String sourceType) {
 
         List<String> visibleCodes = getVisibleMetricCodes();
         if (visibleCodes != null && visibleCodes.isEmpty()) {
@@ -120,6 +128,8 @@ public class IndicatorResultController {
         if (StringUtils.isNotBlank(timeDimension)) {
             wrapper.eq(IndicatorResult::getTimeDimension, timeDimension);
         }
+        // sourceType 过滤：查出对应 input_type 的指标编码集合
+        applySourceTypeFilter(wrapper, sourceType, visibleCodes);
         wrapper.orderByDesc(IndicatorResult::getCreateTime);
         wrapper.last("LIMIT 100");
 
@@ -127,14 +137,15 @@ public class IndicatorResultController {
         return Result.success(results);
     }
 
-    @Operation(summary = "查询指标结果列表", description = "根据指标编码和时间范围查询计算结果")
+    @Operation(summary = "查询指标结果列表", description = "根据指标编码和时间范围查询计算结果，支持按数据来源类型筛选")
     @GetMapping("/list")
     public Result<List<IndicatorResult>> list(
             @Parameter(description = "指标编码") @RequestParam(required = false) String metricCode,
             @Parameter(description = "时间维度") @RequestParam(required = false) String timeDimension,
             @Parameter(description = "时间值", example = "2025 或 2025-01") @RequestParam(required = false) String timeValue,
             @Parameter(description = "开始日期") @RequestParam(required = false) String startDate,
-            @Parameter(description = "结束日期") @RequestParam(required = false) String endDate) {
+            @Parameter(description = "结束日期") @RequestParam(required = false) String endDate,
+            @Parameter(description = "数据来源类型：AUTO/MANUAL（为空查全部）") @RequestParam(required = false) String sourceType) {
 
         List<String> visibleCodes = getVisibleMetricCodes();
         if (visibleCodes != null && visibleCodes.isEmpty()) {
@@ -162,10 +173,31 @@ public class IndicatorResultController {
             LocalDate end = LocalDate.parse(endDate, DATE_FORMATTER);
             wrapper.le(IndicatorResult::getEndDate, end);
         }
+        applySourceTypeFilter(wrapper, sourceType, visibleCodes);
 
         wrapper.orderByDesc(IndicatorResult::getTimeValue);
         List<IndicatorResult> results = resultMapper.selectList(wrapper);
         return Result.success(results);
+    }
+
+    /**
+     * 根据 sourceType（AUTO/MANUAL）过滤指标编码集合，追加到 wrapper。
+     * AUTO/MANUAL 对应 t_indicator.input_type 字段。
+     */
+    private void applySourceTypeFilter(LambdaQueryWrapper<IndicatorResult> wrapper,
+                                       String sourceType, List<String> alreadyVisibleCodes) {
+        if (StringUtils.isBlank(sourceType)) return;
+        List<Indicator> matched = indicatorMapper.selectList(
+                new LambdaQueryWrapper<Indicator>().eq(Indicator::getInputType, sourceType.toUpperCase()));
+        Set<String> filteredCodes = matched.stream().map(Indicator::getMetricCode).collect(Collectors.toSet());
+        if (alreadyVisibleCodes != null) {
+            filteredCodes.retainAll(alreadyVisibleCodes);
+        }
+        if (filteredCodes.isEmpty()) {
+            wrapper.apply("1=0");
+        } else {
+            wrapper.in(IndicatorResult::getMetricCode, filteredCodes);
+        }
     }
 
     @Operation(summary = "查询指标结果详情", description = "根据ID查询指标结果详情")

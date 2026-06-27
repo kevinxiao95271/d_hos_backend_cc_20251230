@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hospital.indicator.mapper.report.ReportTaskMapper">
+
+    <select id="pageByCondition" resultType="com.hospital.indicator.entity.report.ReportTask">
+        SELECT * FROM t_report_task
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="timeDimension != null and timeDimension != ''">
+                AND time_dimension = #{timeDimension}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

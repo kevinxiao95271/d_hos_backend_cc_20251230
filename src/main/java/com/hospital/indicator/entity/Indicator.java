@@ -80,6 +80,10 @@ public class Indicator implements Serializable {
     @TableField("business_direction")
     private String businessDirection;
 
+    @Schema(description = "指标数据来源类型：AUTO=自动采集计算，MANUAL=手工填报")
+    @TableField("input_type")
+    private String inputType;
+
     @Schema(description = "状态：0-禁用，1-启用")
     @TableField("status")
     private Integer status;

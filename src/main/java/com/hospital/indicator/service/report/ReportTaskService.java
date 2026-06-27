@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.hospital.indicator.dto.report.*;
 import com.hospital.indicator.entity.report.ReportTask;
 
+import com.hospital.indicator.dto.report.MyTaskVO;
+
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
@@ -36,6 +38,9 @@ public interface ReportTaskService {
 
     /** 管理员审核科室填报 */
     void reviewDeptFill(ReviewActionDTO dto, String reviewer);
+
+    /** 填报人员查看本科室所有待办/进行中任务 */
+    List<MyTaskVO> getMyTasks(Long deptId);
 
     /** 导出填报模板（空白） */
     void exportFillTemplate(Long taskId, Long deptId, HttpServletResponse response) throws IOException;

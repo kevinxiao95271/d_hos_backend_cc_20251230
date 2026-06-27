@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -205,6 +206,58 @@ public class ReportTaskServiceImpl implements ReportTaskService {
             saveTemplateItems(tpl.getId(), taskId);
             return tpl.getId();
         }
+    }
+
+    @Override
+    public List<MyTaskVO> getMyTasks(Long deptId) {
+        // 找该科室参与的所有已发布任务的 scope 记录
+        List<ReportTaskScope> scopes = scopeMapper.selectList(
+                new LambdaQueryWrapper<ReportTaskScope>().eq(ReportTaskScope::getDeptId, deptId));
+
+        if (scopes.isEmpty()) return Collections.emptyList();
+
+        // 批量加载任务（只看 PUBLISHED 状态）
+        List<Long> taskIds = scopes.stream().map(ReportTaskScope::getTaskId).collect(Collectors.toList());
+        List<ReportTask> tasks = taskMapper.selectList(
+                new LambdaQueryWrapper<ReportTask>()
+                        .in(ReportTask::getId, taskIds)
+                        .in(ReportTask::getStatus, Arrays.asList("PUBLISHED", "CLOSED")));
+
+        Map<Long, ReportTask> taskMap = tasks.stream()
+                .collect(Collectors.toMap(ReportTask::getId, t -> t));
+
+        ReportConfig config = configService.getConfig();
+        LocalDate today = LocalDate.now();
+
+        return scopes.stream()
+                .filter(s -> taskMap.containsKey(s.getTaskId()))
+                .map(s -> {
+                    ReportTask task = taskMap.get(s.getTaskId());
+                    MyTaskVO vo = new MyTaskVO();
+                    vo.setTaskId(task.getId());
+                    vo.setTaskName(task.getName());
+                    vo.setTimeDimension(task.getTimeDimension());
+                    vo.setStartDate(task.getStartDate());
+                    vo.setEndDate(task.getEndDate());
+                    vo.setDeadline(task.getDeadline());
+                    vo.setTaskStatus(task.getStatus());
+                    vo.setFillStatus(s.getFillStatus());
+                    vo.setReviewComment(s.getReviewComment());
+                    vo.setSubmitTime(s.getSubmitTime());
+                    vo.setInputMode(StringUtils.isNotBlank(task.getInputMode()) ? task.getInputMode() : config.getInputMode());
+                    vo.setReviewMode(StringUtils.isNotBlank(task.getReviewMode()) ? task.getReviewMode() : config.getReviewMode());
+                    if (StringUtils.isNotBlank(s.getMetricCodes())) {
+                        List<String> codes = JSON.parseArray(s.getMetricCodes(), String.class);
+                        vo.setMetricCodes(codes);
+                        vo.setMetricCount(codes.size());
+                    }
+                    vo.setOverdue(task.getDeadline() != null && today.isAfter(task.getDeadline())
+                            && !"APPROVED".equals(s.getFillStatus()));
+                    return vo;
+                })
+                .sorted(Comparator.comparing(MyTaskVO::getOverdue).reversed()
+                        .thenComparing(v -> v.getDeadline() == null ? LocalDate.MAX : v.getDeadline()))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.hospital.indicator.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hospital.indicator.common.BusinessException;
 import com.hospital.indicator.common.Result;
 import com.hospital.indicator.context.UserContext;
 import com.hospital.indicator.dto.report.*;
@@ -87,6 +88,19 @@ public class ReportTaskController {
     @GetMapping("/template/{templateId}/scopes")
     public Result<List<ReportTaskDetailVO.ScopeVO>> listTemplateScopes(@PathVariable Long templateId) {
         return Result.success(taskService.listTemplateScopes(templateId));
+    }
+
+    // ─────────── 填报人员视角 ───────────
+
+    @Operation(summary = "填报人员：查看本科室的待办任务列表",
+               description = "返回已发布且分配给当前登录科室的任务，按截止日期紧迫度排序")
+    @GetMapping("/my-tasks")
+    public Result<List<MyTaskVO>> getMyTasks() {
+        UserContext ctx = UserContext.get();
+        if (ctx == null || ctx.getDeptId() == null) {
+            throw new BusinessException("无法获取当前科室信息，请登录后重试");
+        }
+        return Result.success(taskService.getMyTasks(ctx.getDeptId()));
     }
 
     // ─────────── 审核 ───────────

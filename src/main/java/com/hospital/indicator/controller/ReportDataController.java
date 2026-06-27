@@ -71,12 +71,28 @@ public class ReportDataController {
         dataService.exportApprovedData(taskId, response);
     }
 
+    /**
+     * 解析实际生效的 deptId，并做权限校验：
+     * - dataScope=50（超管）：可指定任意 deptId，不传则用自身
+     * - 其他角色：强制使用自身 deptId，传入其他 deptId 直接拒绝
+     */
     private Long resolveDeptId(Long paramDeptId) {
-        if (paramDeptId != null) return paramDeptId;
         UserContext ctx = UserContext.get();
         if (ctx == null || ctx.getDeptId() == null) {
             throw new BusinessException("无法获取当前科室信息，请登录后重试");
         }
-        return ctx.getDeptId();
+        Long myDeptId = ctx.getDeptId();
+        Integer dataScope = ctx.getDataScope();
+        // dataScope=50 才是超管（可跨科室），70/90 只能操作本科室
+        boolean isAdmin = (dataScope != null && dataScope == 50);
+
+        if (paramDeptId == null) {
+            return myDeptId;
+        }
+        // 非超管：只能操作自己科室
+        if (!isAdmin && !paramDeptId.equals(myDeptId)) {
+            throw new BusinessException("无权访问其他科室的填报数据");
+        }
+        return paramDeptId;
     }
 }

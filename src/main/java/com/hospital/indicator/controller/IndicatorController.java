@@ -78,19 +78,25 @@ public class IndicatorController {
         return Result.success(tree);
     }
 
-    @Operation(summary = "根据ID查询指标详情", description = "根据指标ID查询详细信息")
+    @Operation(summary = "根据ID查询指标详情", description = "根据指标ID查询详细信息，不存在时返回 404")
     @GetMapping("/{id}")
     public Result<Indicator> getById(@Parameter(description = "指标ID") @PathVariable Long id) {
         Indicator indicator = indicatorService.getById(id);
+        if (indicator == null) {
+            return Result.error(30404, "指标不存在，id=" + id);
+        }
         return Result.success(indicator);
     }
 
-    @Operation(summary = "根据编码查询指标详情", description = "根据指标编码查询详细信息")
+    @Operation(summary = "根据编码查询指标详情", description = "根据指标编码查询详细信息，不存在时返回 30404")
     @GetMapping("/code/{metricCode}")
     public Result<Indicator> getByCode(@Parameter(description = "指标编码") @PathVariable String metricCode) {
         LambdaQueryWrapper<Indicator> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Indicator::getMetricCode, metricCode);
         Indicator indicator = indicatorService.getOne(queryWrapper);
+        if (indicator == null) {
+            return Result.error(30404, "指标不存在，metricCode=" + metricCode);
+        }
         return Result.success(indicator);
     }
 
@@ -137,7 +143,10 @@ public class IndicatorController {
         }
         boolean isValid = indicatorService.validateExpression(expression);
         resp.put("valid", isValid);
-        resp.put("message", isValid ? "表达式校验通过" : "表达式校验失败：请确保格式正确且只使用已定义的指标项编码");
+        resp.put("message", isValid ? "表达式校验通过" : "表达式校验失败：请使用 a0050/a0029 等指标项编码和四则运算符，如 a0029 * 1.0 / a0030");
+        if (!isValid) {
+            return Result.error(30400, (String) resp.get("message"));
+        }
         return Result.success(resp);
     }
 

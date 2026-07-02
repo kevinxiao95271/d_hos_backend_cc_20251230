@@ -17,7 +17,7 @@ public class Result<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "状态码：200-成功，其他-失败")
+    @Schema(description = "状态码：200=成功；30400=参数错误；30401=未认证；30403=无权限；30404=资源不存在；30500=服务异常")
     private Integer code;
 
     @Schema(description = "返回消息")
@@ -62,10 +62,10 @@ public class Result<T> implements Serializable {
     }
 
     /**
-     * 失败返回
+     * 失败返回（默认 30500 服务异常）
      */
     public static <T> Result<T> error(String message) {
-        return new Result<>(500, message, null);
+        return new Result<>(30500, message, null);
     }
 
     /**

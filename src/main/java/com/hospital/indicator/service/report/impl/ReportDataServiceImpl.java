@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.googlecode.aviator.AviatorEvaluator;
 import com.hospital.indicator.common.BusinessException;
+import com.hospital.indicator.common.ErrorCode;
 import com.hospital.indicator.dto.report.FillSheetVO;
 import com.hospital.indicator.dto.report.ReportDataSaveDTO;
 import com.hospital.indicator.entity.Indicator;
@@ -59,10 +60,11 @@ public class ReportDataServiceImpl implements ReportDataService {
     @Override
     public FillSheetVO getFillSheet(Long taskId, Long deptId) {
         ReportTask task = taskMapper.selectById(taskId);
-        if (task == null) throw new BusinessException("任务不存在");
+        if (task == null) throw new BusinessException(ErrorCode.TASK_NOT_FOUND, "填报任务不存在，taskId=" + taskId);
 
         ReportTaskScope scope = scopeMapper.getByTaskAndDept(taskId, deptId);
-        if (scope == null) throw new BusinessException("当前科室不在该任务填报范围内");
+        if (scope == null) throw new BusinessException(ErrorCode.TASK_NOT_IN_SCOPE,
+                "当前科室不在该任务的填报范围内，taskId=" + taskId + "，deptId=" + deptId);
 
         ReportConfig config = configService.getConfig();
         String effectiveInputMode = StringUtils.isNotBlank(task.getInputMode())
@@ -128,9 +130,10 @@ public class ReportDataServiceImpl implements ReportDataService {
     @Transactional(rollbackFor = Exception.class)
     public void saveOrUpdateItemData(ReportDataSaveDTO dto) {
         ReportTaskScope scope = scopeMapper.getByTaskAndDept(dto.getTaskId(), dto.getDeptId());
-        if (scope == null) throw new BusinessException("当前科室不在该任务填报范围内");
+        if (scope == null) throw new BusinessException(ErrorCode.TASK_NOT_IN_SCOPE,
+                "当前科室不在该任务的填报范围内，taskId=" + dto.getTaskId() + "，deptId=" + dto.getDeptId());
         if ("APPROVED".equals(scope.getFillStatus())) {
-            throw new BusinessException("已审核通过，不可再次修改");
+            throw new BusinessException(ErrorCode.FILL_ALREADY_APPROVED, "当前科室填报已审核通过，不可再次修改");
         }
 
         ReportTask task = taskMapper.selectById(dto.getTaskId());
@@ -191,9 +194,10 @@ public class ReportDataServiceImpl implements ReportDataService {
     @Transactional(rollbackFor = Exception.class)
     public void submitFill(Long taskId, Long deptId) {
         ReportTaskScope scope = scopeMapper.getByTaskAndDept(taskId, deptId);
-        if (scope == null) throw new BusinessException("当前科室不在该任务填报范围内");
+        if (scope == null) throw new BusinessException(ErrorCode.TASK_NOT_IN_SCOPE,
+                "当前科室不在该任务的填报范围内，taskId=" + taskId + "，deptId=" + deptId);
         if ("APPROVED".equals(scope.getFillStatus())) {
-            throw new BusinessException("已审核通过");
+            throw new BusinessException(ErrorCode.FILL_ALREADY_APPROVED, "当前科室填报已审核通过，无需重复提交");
         }
         scope.setFillStatus("SUBMITTED");
         scope.setSubmitTime(LocalDateTime.now());
@@ -205,9 +209,10 @@ public class ReportDataServiceImpl implements ReportDataService {
     @Transactional(rollbackFor = Exception.class)
     public void importFromExcel(Long taskId, Long deptId, HttpServletRequest request) throws IOException {
         ReportTaskScope scope = scopeMapper.getByTaskAndDept(taskId, deptId);
-        if (scope == null) throw new BusinessException("当前科室不在该任务填报范围内");
+        if (scope == null) throw new BusinessException(ErrorCode.TASK_NOT_IN_SCOPE,
+                "当前科室不在该任务的填报范围内，taskId=" + taskId + "，deptId=" + deptId);
         if ("APPROVED".equals(scope.getFillStatus())) {
-            throw new BusinessException("已审核通过，无法重新导入");
+            throw new BusinessException(ErrorCode.FILL_ALREADY_APPROVED, "当前科室填报已审核通过，无法重新导入");
         }
 
         ReportTask task = taskMapper.selectById(taskId);

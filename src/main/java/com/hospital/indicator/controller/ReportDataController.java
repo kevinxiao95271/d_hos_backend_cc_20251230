@@ -1,6 +1,7 @@
 package com.hospital.indicator.controller;
 
 import com.hospital.indicator.common.BusinessException;
+import com.hospital.indicator.common.ErrorCode;
 import com.hospital.indicator.common.Result;
 import com.hospital.indicator.context.UserContext;
 import com.hospital.indicator.dto.report.FillSheetVO;
@@ -91,7 +92,8 @@ public class ReportDataController {
         }
         // 非超管：只能操作自己科室
         if (!isAdmin && !paramDeptId.equals(myDeptId)) {
-            throw new BusinessException("无权访问其他科室的填报数据");
+            throw new BusinessException(ErrorCode.CROSS_DEPT_DENIED,
+                    "无权访问其他科室的填报数据，当前科室ID=" + myDeptId + "，请求科室ID=" + paramDeptId);
         }
         return paramDeptId;
     }

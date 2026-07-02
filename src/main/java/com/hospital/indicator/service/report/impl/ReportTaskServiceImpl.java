@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hospital.indicator.common.BusinessException;
+import com.hospital.indicator.common.ErrorCode;
 import com.hospital.indicator.context.UserContext;
 import com.hospital.indicator.dto.report.*;
 import com.hospital.indicator.entity.Indicator;
@@ -72,7 +73,7 @@ public class ReportTaskServiceImpl implements ReportTaskService {
     public ReportTask createFromTemplate(Long templateId, ReportTaskCreateDTO baseInfo, String operator) {
         ReportTemplate template = templateMapper.selectById(templateId);
         if (template == null) {
-            throw new BusinessException("模板不存在：" + templateId);
+            throw new BusinessException(ErrorCode.TEMPLATE_NOT_FOUND, "填报模板不存在，templateId=" + templateId);
         }
         List<ReportTemplateItem> items = templateItemMapper.listByTemplateId(templateId);
 
@@ -106,7 +107,7 @@ public class ReportTaskServiceImpl implements ReportTaskService {
     public ReportTaskDetailVO getTaskDetail(Long taskId) {
         ReportTask task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new BusinessException("任务不存在：" + taskId);
+            throw new BusinessException(ErrorCode.TASK_NOT_FOUND, "填报任务不存在，taskId=" + taskId);
         }
         ReportConfig config = configService.getConfig();
         ReportTaskDetailVO vo = new ReportTaskDetailVO();
@@ -136,10 +137,11 @@ public class ReportTaskServiceImpl implements ReportTaskService {
     public void publishTask(Long taskId, String operator) {
         ReportTask task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new BusinessException("任务不存在：" + taskId);
+            throw new BusinessException(ErrorCode.TASK_NOT_FOUND, "填报任务不存在，taskId=" + taskId);
         }
         if (!"DRAFT".equals(task.getStatus())) {
-            throw new BusinessException("只有草稿状态的任务可以发布");
+            throw new BusinessException(ErrorCode.TASK_STATUS_CONFLICT,
+                    "只有草稿状态的任务可以发布，当前状态=" + task.getStatus());
         }
         taskMapper.update(null, new LambdaUpdateWrapper<ReportTask>()
                 .eq(ReportTask::getId, taskId)
@@ -279,13 +281,15 @@ public class ReportTaskServiceImpl implements ReportTaskService {
     public void reviewDeptFill(ReviewActionDTO dto, String reviewer) {
         ReportTaskScope scope = scopeMapper.getByTaskAndDept(dto.getTaskId(), dto.getDeptId());
         if (scope == null) {
-            throw new BusinessException("未找到对应的科室填报记录");
+            throw new BusinessException(ErrorCode.TASK_NOT_IN_SCOPE,
+                    "未找到对应的科室填报记录，taskId=" + dto.getTaskId() + "，deptId=" + dto.getDeptId());
         }
         if (!"SUBMITTED".equals(scope.getFillStatus())) {
-            throw new BusinessException("该科室填报尚未提交，无法审核");
+            throw new BusinessException(ErrorCode.FILL_NOT_SUBMITTED,
+                    "该科室填报尚未提交，无法审核，当前状态=" + scope.getFillStatus());
         }
         if ("REJECTED".equals(dto.getAction()) && StringUtils.isBlank(dto.getComment())) {
-            throw new BusinessException("打回必须填写原因");
+            throw new BusinessException(ErrorCode.REJECT_REASON_REQUIRED, "打回审核必须填写原因（comment 字段不能为空）");
         }
         String newStatus = "APPROVED".equals(dto.getAction()) ? "APPROVED" : "REJECTED";
         scope.setFillStatus(newStatus);
@@ -300,7 +304,8 @@ public class ReportTaskServiceImpl implements ReportTaskService {
     public void exportFillTemplate(Long taskId, Long deptId, HttpServletResponse response) throws IOException {
         ReportTaskScope scope = scopeMapper.getByTaskAndDept(taskId, deptId);
         if (scope == null) {
-            throw new BusinessException("未找到该科室的填报范围");
+            throw new BusinessException(ErrorCode.TASK_NOT_IN_SCOPE,
+                    "该科室不在此任务的填报范围内，taskId=" + taskId + "，deptId=" + deptId);
         }
         List<String> metricCodes = JSON.parseArray(scope.getMetricCodes(), String.class);
 

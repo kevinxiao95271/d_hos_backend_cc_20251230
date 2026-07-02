@@ -72,19 +72,25 @@ public class IndicatorItemController {
         return Result.success(list);
     }
 
-    @Operation(summary = "根据ID查询指标项详情", description = "根据指标项ID查询详细信息")
+    @Operation(summary = "根据ID查询指标项详情", description = "根据指标项ID查询详细信息，不存在时返回 404")
     @GetMapping("/{id}")
     public Result<IndicatorItem> getById(@Parameter(description = "指标项ID") @PathVariable Long id) {
         IndicatorItem item = indicatorItemService.getById(id);
+        if (item == null) {
+            return Result.error(30404, "指标项不存在，id=" + id);
+        }
         return Result.success(item);
     }
 
-    @Operation(summary = "根据编码查询指标项详情", description = "根据指标项编码查询详细信息")
+    @Operation(summary = "根据编码查询指标项详情", description = "根据指标项编码查询详细信息，不存在时返回 30404")
     @GetMapping("/code/{itemCode}")
     public Result<IndicatorItem> getByCode(@Parameter(description = "指标项编码") @PathVariable String itemCode) {
         LambdaQueryWrapper<IndicatorItem> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(IndicatorItem::getItemCode, itemCode);
         IndicatorItem item = indicatorItemService.getOne(queryWrapper);
+        if (item == null) {
+            return Result.error(30404, "指标项不存在，itemCode=" + itemCode);
+        }
         return Result.success(item);
     }
 
@@ -141,7 +147,10 @@ public class IndicatorItemController {
         }
         boolean isValid = indicatorItemService.validateSql(sql);
         resp.put("valid", isValid);
-        resp.put("message", isValid ? "SQL校验通过" : "SQL校验失败：请确保是SELECT查询且不包含危险操作");
+        resp.put("message", isValid ? "SQL校验通过" : "SQL校验失败：请确保是SELECT查询且不包含危险操作（DROP/DELETE/UPDATE/INSERT等均不允许）");
+        if (!isValid) {
+            return Result.error(30400, (String) resp.get("message"));
+        }
         return Result.success(resp);
     }
 

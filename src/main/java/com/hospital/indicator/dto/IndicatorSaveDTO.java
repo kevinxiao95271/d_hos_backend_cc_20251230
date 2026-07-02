@@ -70,4 +70,17 @@ public class IndicatorSaveDTO {
     @Schema(description = "指标池：POOL_NATIONAL(国考)、POOL_GRADE(等级评审)", example = "POOL_NATIONAL")
     private String metricPool;
 
+    @Schema(description = "指标数据来源类型：AUTO=自动采集计算，MANUAL=手工填报", example = "AUTO")
+    private String inputType;
+
+    @Schema(description = "指标分类：医疗质量、运营效率、财务成本、患者安全等", example = "医疗质量")
+    private String metricCategory;
+
+    @Schema(description = "目标值（用于达标率/质检判断）", example = "0.005")
+    private java.math.BigDecimal targetValue;
+
+    @Schema(description = "监测方向：INCREASE(逐步提高) / DECREASE(逐步降低) / MONITOR(仅监测)",
+            example = "DECREASE", allowableValues = {"INCREASE", "DECREASE", "MONITOR"})
+    private String monitorDirection;
+
 }

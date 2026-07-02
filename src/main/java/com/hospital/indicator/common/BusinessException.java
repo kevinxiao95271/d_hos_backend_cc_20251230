@@ -14,7 +14,7 @@ public class BusinessException extends RuntimeException {
 
     public BusinessException(String message) {
         super(message);
-        this.code = 500;
+        this.code = 30400;
     }
 
     public BusinessException(Integer code, String message) {
@@ -24,7 +24,7 @@ public class BusinessException extends RuntimeException {
 
     public BusinessException(String message, Throwable cause) {
         super(message, cause);
-        this.code = 500;
+        this.code = 30500;
     }
 
     public Integer getCode() {

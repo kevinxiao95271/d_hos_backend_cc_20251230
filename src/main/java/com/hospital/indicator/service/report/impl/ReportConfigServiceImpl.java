@@ -2,6 +2,7 @@ package com.hospital.indicator.service.report.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.hospital.indicator.common.BusinessException;
+import com.hospital.indicator.common.ErrorCode;
 import com.hospital.indicator.dto.report.ReportConfigDTO;
 import com.hospital.indicator.entity.report.ReportConfig;
 import com.hospital.indicator.mapper.report.ReportConfigMapper;
@@ -42,13 +43,16 @@ public class ReportConfigServiceImpl implements ReportConfigService {
     @Override
     public ReportConfig updateConfig(ReportConfigDTO dto, String operator) {
         if (!VALID_INPUT_MODES.contains(dto.getInputMode())) {
-            throw new BusinessException("填报方式不合法：" + dto.getInputMode());
+            throw new BusinessException(ErrorCode.CONFIG_VALUE_INVALID,
+                    "填报方式不合法，可选值：RESULT_ONLY / NUM_DEN / NUM_DEN_OR_RESULT，当前值：" + dto.getInputMode());
         }
         if (!VALID_VERSION_STRATEGIES.contains(dto.getVersionStrategy())) {
-            throw new BusinessException("版本策略不合法：" + dto.getVersionStrategy());
+            throw new BusinessException(ErrorCode.CONFIG_VALUE_INVALID,
+                    "版本策略不合法，可选值：OVERWRITE / VERSIONED，当前值：" + dto.getVersionStrategy());
         }
         if (!VALID_REVIEW_MODES.contains(dto.getReviewMode())) {
-            throw new BusinessException("审核流程不合法：" + dto.getReviewMode());
+            throw new BusinessException(ErrorCode.CONFIG_VALUE_INVALID,
+                    "审核流程不合法，可选值：AUTO_APPROVE / ADMIN_REVIEW，当前值：" + dto.getReviewMode());
         }
 
         ReportConfig config = getConfig();

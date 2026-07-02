@@ -1,5 +1,6 @@
 package com.hospital.indicator.controller;
 
+import com.hospital.indicator.common.Result;
 import com.hospital.indicator.entity.sys.Dept;
 import com.hospital.indicator.service.sys.DeptService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,19 +20,19 @@ public class DeptController {
 
     @Operation(summary = "获取科室树结构")
     @GetMapping("/tree")
-    public List<Dept> getTree() {
-        return deptService.getDeptTree();
+    public Result<List<Dept>> getTree() {
+        return Result.success(deptService.getDeptTree());
     }
 
     @Operation(summary = "获取当前用户可见的科室列表")
     @GetMapping("/list/visible")
-    public List<Dept> getVisibleList() {
-        return deptService.getVisibleDepts();
+    public Result<List<Dept>> getVisibleList() {
+        return Result.success(deptService.getVisibleDepts());
     }
 
     @Operation(summary = "新增/修改科室")
     @PostMapping("/save")
-    public boolean save(@RequestBody Dept dept) {
-        return deptService.saveOrUpdate(dept);
+    public Result<Boolean> save(@RequestBody Dept dept) {
+        return Result.success(deptService.saveOrUpdate(dept));
     }
 }

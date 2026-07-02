@@ -1,6 +1,8 @@
 package com.hospital.indicator.controller;
 
+import com.hospital.indicator.common.BusinessException;
 import com.hospital.indicator.common.Result;
+import com.hospital.indicator.context.UserContext;
 import com.hospital.indicator.entity.IndicatorDeptScope;
 import com.hospital.indicator.service.IndicatorScopeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +25,14 @@ public class IndicatorScopeController {
     @Autowired
     private IndicatorScopeService scopeService;
 
+    /** 仅超管（dataScope=50）可执行写操作，否则抛 403 */
+    private void requireAdmin() {
+        UserContext user = UserContext.get();
+        if (user == null || !Integer.valueOf(50).equals(user.getDataScope())) {
+            throw new BusinessException(30403, "无权限：指标范围配置仅超级管理员可操作");
+        }
+    }
+
     // ─────────────────────────── 查询 ───────────────────────────
 
     @Operation(summary = "查询科室已绑定的指标列表")
@@ -41,12 +51,21 @@ public class IndicatorScopeController {
 
     // ─────────────────────────── 新增单条 ───────────────────────────
 
-    @Operation(summary = "新增单条科室-指标绑定",
-               description = "若已存在则忽略（幂等）")
+    @Operation(summary = "新增单条科室-指标绑定（仅超管）",
+               description = "Body 必须包含 deptId（科室数字主键，从 GET /system/depts 取 deptId 字段）和 metricCode。若已存在则忽略（幂等）。")
     @PostMapping("/binding")
     public Result<Void> addBinding(@RequestBody Map<String, Object> body) {
-        Long deptId = Long.valueOf(body.get("deptId").toString());
-        String metricCode = body.get("metricCode").toString();
+        requireAdmin();
+        Object deptIdObj = body.get("deptId");
+        if (deptIdObj == null) {
+            return Result.error(30400, "缺少必填参数 deptId（科室数字主键，请从 GET /system/depts 获取 deptId 字段，非 deptCode）");
+        }
+        Object metricCodeObj = body.get("metricCode");
+        if (metricCodeObj == null) {
+            return Result.error(30400, "缺少必填参数 metricCode");
+        }
+        Long deptId = Long.valueOf(deptIdObj.toString());
+        String metricCode = metricCodeObj.toString();
         Integer isPrimaryOwner = body.containsKey("isPrimaryOwner")
                 ? Integer.valueOf(body.get("isPrimaryOwner").toString()) : 1;
         scopeService.addBinding(deptId, metricCode, isPrimaryOwner);
@@ -55,10 +74,11 @@ public class IndicatorScopeController {
 
     // ─────────────────────────── 批量覆盖 ───────────────────────────
 
-    @Operation(summary = "批量设置科室的可见指标（覆盖）",
+    @Operation(summary = "批量设置科室的可见指标（覆盖，仅超管）",
                description = "传入科室ID + 指标编码列表，先清空再写入；传空列表则清空该科室所有绑定")
     @PostMapping("/replace-by-dept")
     public Result<Void> replaceByDept(@RequestBody Map<String, Object> body) {
+        requireAdmin();
         Long deptId = Long.valueOf(body.get("deptId").toString());
         @SuppressWarnings("unchecked")
         List<String> metricCodes = (List<String>) body.get("metricCodes");
@@ -68,10 +88,11 @@ public class IndicatorScopeController {
         return Result.success("设置完成，共绑定 " + (metricCodes == null ? 0 : metricCodes.size()) + " 个指标", null);
     }
 
-    @Operation(summary = "批量设置指标的可见科室（覆盖）",
+    @Operation(summary = "批量设置指标的可见科室（覆盖，仅超管）",
                description = "传入指标编码 + 科室ID列表，先清空再写入；传空列表则清空该指标所有科室绑定")
     @PostMapping("/replace-by-metric")
     public Result<Void> replaceByMetric(@RequestBody Map<String, Object> body) {
+        requireAdmin();
         String metricCode = body.get("metricCode").toString();
         @SuppressWarnings("unchecked")
         List<Object> rawIds = (List<Object>) body.get("deptIds");
@@ -85,27 +106,30 @@ public class IndicatorScopeController {
 
     // ─────────────────────────── 删除 ───────────────────────────
 
-    @Operation(summary = "删除单条科室-指标绑定")
+    @Operation(summary = "删除单条科室-指标绑定（仅超管）")
     @DeleteMapping("/binding")
     public Result<Void> removeBinding(
             @Parameter(description = "科室ID") @RequestParam Long deptId,
             @Parameter(description = "指标编码") @RequestParam String metricCode) {
+        requireAdmin();
         scopeService.removeBinding(deptId, metricCode);
         return Result.success("解绑成功", null);
     }
 
-    @Operation(summary = "清空某科室的全部指标绑定")
+    @Operation(summary = "清空某科室的全部指标绑定（仅超管）")
     @DeleteMapping("/by-dept/{deptId}")
     public Result<Void> clearByDept(
             @Parameter(description = "科室ID") @PathVariable Long deptId) {
+        requireAdmin();
         scopeService.clearByDept(deptId);
         return Result.success("已清空该科室所有指标绑定", null);
     }
 
-    @Operation(summary = "清空某指标的全部科室绑定")
+    @Operation(summary = "清空某指标的全部科室绑定（仅超管）")
     @DeleteMapping("/by-metric/{metricCode}")
     public Result<Void> clearByMetric(
             @Parameter(description = "指标编码") @PathVariable String metricCode) {
+        requireAdmin();
         scopeService.clearByMetric(metricCode);
         return Result.success("已清空该指标所有科室绑定", null);
     }

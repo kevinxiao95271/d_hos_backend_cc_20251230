@@ -84,6 +84,14 @@ public class Indicator implements Serializable {
     @TableField("input_type")
     private String inputType;
 
+    @Schema(description = "目标值")
+    @TableField("target_value")
+    private java.math.BigDecimal targetValue;
+
+    @Schema(description = "监测方向：INCREASE(逐步提高) / DECREASE(逐步降低) / MONITOR(监测比较)")
+    @TableField("monitor_direction")
+    private String monitorDirection;
+
     @Schema(description = "状态：0-禁用，1-启用")
     @TableField("status")
     private Integer status;

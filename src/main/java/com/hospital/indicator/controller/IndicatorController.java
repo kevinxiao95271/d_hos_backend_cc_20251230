@@ -3,7 +3,10 @@ package com.hospital.indicator.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hospital.indicator.common.BusinessException;
+import com.hospital.indicator.common.ErrorCode;
 import com.hospital.indicator.common.Result;
+import com.hospital.indicator.context.UserContext;
 import com.hospital.indicator.dto.IndicatorSaveDTO;
 import com.hospital.indicator.dto.IndicatorTreeDTO;
 import com.hospital.indicator.entity.Indicator;
@@ -107,23 +110,54 @@ public class IndicatorController {
         return Result.success(children);
     }
 
-    @Operation(summary = "保存或更新指标", description = "新增或更新指标配置")
+    @Operation(summary = "保存或更新指标（仅超管）",
+            description = "仅 dataScope=50 可操作。新增时不传 id，更新时必须传现有 id 且 metricCode 不可修改；indicatorLevel 由后端根据 parentCode 自动计算。")
     @PostMapping("/save")
     public Result<Indicator> save(@Validated @RequestBody IndicatorSaveDTO dto) {
+        requireAdmin();
         Indicator indicator = indicatorService.saveOrUpdateIndicator(dto);
         return Result.success("保存成功", indicator);
     }
 
-    @Operation(summary = "删除指标", description = "根据ID删除指标")
+    @Operation(summary = "删除指标（仅超管）", description = "根据ID删除指标")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "指标ID") @PathVariable Long id) {
+        requireAdmin();
+        Indicator indicator = indicatorService.getById(id);
+        if (indicator == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "指标不存在，id=" + id);
+        }
+        if (!indicatorService.getByParentCode(indicator.getMetricCode()).isEmpty()) {
+            throw new BusinessException(ErrorCode.INDICATOR_CONFIG_CONFLICT,
+                    "该指标存在子节点，请先删除子节点");
+        }
         indicatorService.removeById(id);
         return Result.success("删除成功", null);
     }
 
-    @Operation(summary = "批量删除指标", description = "根据ID列表批量删除指标")
+    @Operation(summary = "批量删除指标（仅超管）", description = "根据ID列表批量删除指标")
     @DeleteMapping("/batch")
     public Result<Void> batchDelete(@RequestBody List<Long> ids) {
+        requireAdmin();
+        if (ids == null || ids.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_INVALID, "ids 不能为空");
+        }
+        List<Indicator> indicators = indicatorService.listByIds(ids);
+        if (indicators.size() != ids.size()) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "批量删除列表中包含不存在的指标ID");
+        }
+        java.util.Set<String> deletingCodes = indicators.stream()
+                .map(Indicator::getMetricCode)
+                .collect(java.util.stream.Collectors.toSet());
+        for (Indicator indicator : indicators) {
+            boolean hasRemainingChild = indicatorService.getByParentCode(indicator.getMetricCode())
+                    .stream()
+                    .anyMatch(child -> !deletingCodes.contains(child.getMetricCode()));
+            if (hasRemainingChild) {
+                throw new BusinessException(ErrorCode.INDICATOR_CONFIG_CONFLICT,
+                        "指标 " + indicator.getMetricCode() + " 存在未包含在本次删除中的子节点");
+            }
+        }
         indicatorService.removeByIds(ids);
         return Result.success("批量删除成功", null);
     }
@@ -148,6 +182,14 @@ public class IndicatorController {
             return Result.error(30400, (String) resp.get("message"));
         }
         return Result.success(resp);
+    }
+
+    private void requireAdmin() {
+        UserContext user = UserContext.get();
+        if (user == null || !Integer.valueOf(50).equals(user.getDataScope())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN,
+                    "无权限：仅超级管理员（dataScope=50）可维护指标");
+        }
     }
 
 }

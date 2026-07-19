@@ -30,7 +30,7 @@ public class IndicatorSaveDTO {
     @Schema(description = "父级指标编码", example = "10.3")
     private String parentCode;
 
-    @Schema(description = "指标层级", example = "3")
+    @Schema(description = "指标层级（后端根据父级自动计算，前端可不传）", example = "3")
     private Integer indicatorLevel;
 
     @Schema(description = "是否叶子节点：0-否，1-是", required = true)
@@ -41,7 +41,8 @@ public class IndicatorSaveDTO {
     @NotBlank(message = "指标类型不能为空")
     private String metricType;
 
-    @Schema(description = "计算类型：ITEM(指标项)、EXPRESSION(表达式)", required = true)
+    @Schema(description = "计算类型：NONE(非叶子/手工指标)、ITEM(单指标项)、EXPRESSION(表达式)", required = true,
+            allowableValues = {"NONE", "ITEM", "EXPRESSION"})
     @NotBlank(message = "计算类型不能为空")
     private String calculationType;
 
@@ -72,6 +73,9 @@ public class IndicatorSaveDTO {
 
     @Schema(description = "指标数据来源类型：AUTO=自动采集计算，MANUAL=手工填报", example = "AUTO")
     private String inputType;
+
+    @Schema(description = "业务方向，多个值用逗号分隔", example = "INPATIENT,OUTPATIENT")
+    private String businessDirection;
 
     @Schema(description = "指标分类：医疗质量、运营效率、财务成本、患者安全等", example = "医疗质量")
     private String metricCategory;

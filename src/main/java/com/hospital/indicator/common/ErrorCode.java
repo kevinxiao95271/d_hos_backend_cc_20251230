@@ -59,6 +59,10 @@ public interface ErrorCode {
     int REJECT_REASON_REQUIRED  = 304093;
     /** 填报配置项值非法 */
     int CONFIG_VALUE_INVALID    = 304094;
+    /** 指标编码已存在 */
+    int INDICATOR_CODE_DUPLICATE = 304095;
+    /** 指标层级或类型组合冲突 */
+    int INDICATOR_CONFIG_CONFLICT = 304096;
 
     // ─── 系统异常 ────────────────────────────────────────────────
     /** 服务端未知异常 */

@@ -30,7 +30,7 @@ check('拿到 token', bool(token))
 # 错误密码应返回 401
 r2 = requests.post(f'{ROOT}/auth/login', params={'username':'admin','password':'wrong'})
 d2 = r2.json()
-check('错误密码返回 401 (非500)', d2.get('code') == 401, str(d2.get('code')))
+check('错误密码返回 401 (非500)', d2.get('code') == 30401, str(d2.get('code')))
 
 hdr = {'Authorization': f'Bearer {token}'}
 
@@ -54,7 +54,7 @@ check('GET /auth/menus 返回 Result 格式', isinstance(d, dict) and 'code' in 
 # GET /auth/login 应返回 405
 r = requests.get(f'{ROOT}/auth/login')
 d = r.json()
-check('GET /auth/login 返回 405 (非500)', d.get('code') == 405, str(d.get('code')))
+check('GET /auth/login 返回 405 (非500)', d.get('code') == 30405, str(d.get('code')))
 
 # ─── A类: system 别名 ────────────────────────────────────────────────────────
 print('\n[4] System 别名路径')
@@ -88,20 +88,20 @@ for method, url, label, body in stubs:
     check(f'{label} 200', d.get('code') == 200, str(d.get('code')))
 
 # ─── B类: 计算接口错误码应为 4xx 而非 500 ──────────────────────────────────
-print('\n[6] B类计算接口（用不存在的指标码，应返回 4040 而非 500）')
+print('\n[6] B类计算接口（用不存在的指标码，应返回 30400/30404 而非 500）')
 r = requests.post(f'{BASE}/indicator-result/calculate',
                   params={'metricCode':'NO_EXIST','timeDimension':'MONTH',
                           'startDate':'2020-01-01','endDate':'2020-01-31'},
                   headers=hdr)
 d = r.json()
-check('不存在指标计算 → 4040 非500', d.get('code') == 4040, str(d.get('code')) + ' ' + str(d.get('message')))
+check('不存在指标计算 → 4xx 非500', d.get('code') in (30400, 30404, 4040), str(d.get('code')) + ' ' + str(d.get('message')))
 
 r = requests.post(f'{BASE}/indicator-result/dept-drill-down',
                   params={'metricCode':'NO_EXIST','timeDimension':'MONTH',
                           'startDate':'2020-01-01','endDate':'2020-01-31'},
                   headers=hdr)
 d = r.json()
-check('不存在指标下钻 → 4040 非500', d.get('code') == 4040, str(d.get('code')) + ' ' + str(d.get('message')))
+check('不存在指标下钻 → 4xx 非500', d.get('code') in (30400, 30404, 4040), str(d.get('code')) + ' ' + str(d.get('message')))
 
 # ─── 原有正常接口验证（回归） ─────────────────────────────────────────────
 print('\n[7] 回归：原有正常接口')

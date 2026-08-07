@@ -4,7 +4,6 @@ import com.hospital.indicator.dto.dataentry.ManualDataSaveDTO;
 import com.hospital.indicator.entity.dataentry.ManualData;
 import com.hospital.indicator.mapper.dataentry.ManualDataMapper;
 import com.hospital.indicator.service.dataentry.ManualDataService;
-import com.hospital.indicator.util.UserContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,14 +32,7 @@ public class ManualDataServiceImpl implements ManualDataService {
         entity.setMainDiagnosisName(dto.getMainDiagnosisName());
         entity.setTotalCost(dto.getTotalCost());
         entity.setDataSource("MANUAL");
-
-        // 获取当前登录用户
-        try {
-            String username = UserContext.getCurrentUsername();
-            entity.setCreatedBy(username);
-        } catch (Exception e) {
-            entity.setCreatedBy("system");
-        }
+        entity.setCreatedBy("system");  // TODO: 从登录上下文获取用户名
 
         manualDataMapper.insert(entity);
         return entity.getId();
